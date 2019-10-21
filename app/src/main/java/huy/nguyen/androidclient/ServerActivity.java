@@ -1,93 +1,106 @@
 package huy.nguyen.androidclient;
-
 import android.annotation.SuppressLint;
-import android.content.Intent;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
+
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 @SuppressLint("SetTextI18n")
-public class MainActivity extends AppCompatActivity {
+public class ServerActivity extends AppCompatActivity {
+    ServerSocket serverSocket;
     Thread Thread1 = null;
-    EditText etIP, etPort;
+    TextView tvIP, tvPort;
     TextView tvMessages;
     EditText etMessage;
     Button btnSend;
-    Button btnSwap;
-    String SERVER_IP;
-    int SERVER_PORT;
+    public static String SERVER_IP = "";
+    public static final int SERVER_PORT = 8080;
+    String message;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        etIP = findViewById(R.id.etIP);
-        etPort = findViewById(R.id.etPort);
+        setContentView(R.layout.activity_server);
+        tvIP = findViewById(R.id.tvIP);
+        tvPort = findViewById(R.id.tvPort);
         tvMessages = findViewById(R.id.tvMessages);
         etMessage = findViewById(R.id.etMessage);
         btnSend = findViewById(R.id.btnSend);
-        btnSwap = findViewById(R.id.btnSwap);
-        Button btnConnect = findViewById(R.id.btnConnect);
-        btnConnect.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                tvMessages.setText("");
-                SERVER_IP = etIP.getText().toString().trim();
-                SERVER_PORT = Integer.parseInt(etPort.getText().toString().trim());
-                Thread1 = new Thread(new Thread1());
-                Thread1.start();
-            }
-        });
+        try {
+            SERVER_IP = getLocalIpAddress();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        Thread1 = new Thread(new Thread1());
+        Thread1.start();
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String message = etMessage.getText().toString().trim();
+                message = etMessage.getText().toString().trim();
                 if (!message.isEmpty()) {
                     new Thread(new Thread3(message)).start();
                 }
             }
         });
-        btnSwap.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this,ServerActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
     }
-
+    private String getLocalIpAddress() throws UnknownHostException {
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        assert wifiManager != null;
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        int ipInt = wifiInfo.getIpAddress();
+        return InetAddress.getByAddress(ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(ipInt).array()).getHostAddress();
+    }
     private PrintWriter output;
     private BufferedReader input;
     class Thread1 implements Runnable {
+        @Override
         public void run() {
             Socket socket;
             try {
-                socket = new Socket(SERVER_IP, SERVER_PORT);
-                output = new PrintWriter(socket.getOutputStream());
-                input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//                InetAddress locIP = InetAddress.getByName("192.168.1.101");
+                serverSocket = new ServerSocket(SERVER_PORT);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        tvMessages.setText("Connected\n");
+                        tvMessages.setText("Not connected");
+                        tvIP.setText("IP: " + SERVER_IP);
+                        tvPort.setText("Port: " + String.valueOf(SERVER_PORT));
                     }
                 });
-                new Thread(new Thread2()).start();
+                try {
+                    socket = serverSocket.accept();
+                    output = new PrintWriter(socket.getOutputStream());
+                    input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            tvMessages.setText("Connected\n");
+                        }
+                    });
+                    new Thread(new Thread2()).start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
-    class Thread2 implements Runnable {
+    private class Thread2 implements Runnable {
         @Override
         public void run() {
             while (true) {
@@ -97,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                tvMessages.append("server: " + message + "\n");
+                                tvMessages.append("client:" + message + "\n");
                             }
                         });
                     } else {
@@ -118,12 +131,12 @@ public class MainActivity extends AppCompatActivity {
         }
         @Override
         public void run() {
-            output.write(message+"\n");
+            output.write(message);
             output.flush();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    tvMessages.append("client: " + message + "\n");
+                    tvMessages.append("server: " + message + "\n");
                     etMessage.setText("");
                 }
             });
