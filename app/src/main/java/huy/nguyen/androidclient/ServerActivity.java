@@ -4,6 +4,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -131,7 +132,7 @@ public class ServerActivity extends AppCompatActivity {
         }
         @Override
         public void run() {
-            output.write(message);
+            output.write(message+"\n");
             output.flush();
             runOnUiThread(new Runnable() {
                 @Override
