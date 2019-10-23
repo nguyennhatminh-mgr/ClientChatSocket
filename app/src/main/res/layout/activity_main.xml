@@ -1,56 +1,89 @@
 <?xml version = "1.0" encoding = "utf-8"?>
-<RelativeLayout xmlns:android = "http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android = "http://schemas.android.com/apk/res/android"
     xmlns:tools = "http://schemas.android.com/tools"
     android:layout_width = "match_parent"
     android:layout_height = "match_parent"
     android:layout_margin = "16dp"
-    tools:context = ".MainActivity">
-    <Button
-        android:id="@+id/btnSwap"
-        android:text="Swap to server"
+    tools:context = ".MainActivity"
+
+    >
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-    <EditText
-        android:id = "@+id/etIP"
-        android:layout_width = "match_parent"
-        android:layout_height = "wrap_content"
-        android:layout_below = "@+id/btnSwap"
-        android:hint = "IP-Address"
-        android:inputType = "text" />
-    <EditText
-        android:id = "@+id/etPort"
-        android:layout_width = "match_parent"
-        android:layout_height = "wrap_content"
-        android:layout_below = "@+id/etIP"
-        android:hint = "Port No"
-        android:inputType = "number" />
-    <Button
-        android:id = "@+id/btnConnect"
-        android:layout_width = "match_parent"
-        android:layout_height = "wrap_content"
-        android:layout_below = "@+id/etPort"
-        android:layout_gravity = "center"
-        android:layout_marginTop = "16dp"
-        android:text = "Connect To Server" />
-    <TextView
-        android:id = "@+id/tvMessages"
-        android:layout_width = "match_parent"
-        android:layout_height = "wrap_content"
-        android:layout_above = "@+id/etMessage"
-        android:layout_below = "@+id/btnConnect"
-        android:inputType = "textMultiLine"
-        android:textAppearance = "@style/Base.TextAppearance.AppCompat.Medium" />
-    <EditText
-        android:id = "@+id/etMessage"
-        android:layout_width = "match_parent"
-        android:layout_height = "wrap_content"
-        android:layout_above = "@+id/btnSend"
-        android:hint = "Enter Message"
-        android:inputType = "text" />
-    <Button
-        android:id = "@+id/btnSend"
-        android:layout_width = "match_parent"
-        android:layout_height = "wrap_content"
-        android:layout_alignParentBottom = "true"
-        android:text = "SEND" />
-</RelativeLayout>
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <Button
+            android:id="@+id/btnSwap"
+            android:text="Swap to server"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        <EditText
+            android:id = "@+id/etIP"
+            android:layout_width = "match_parent"
+            android:layout_height = "wrap_content"
+            android:hint = "IP-Address"
+            android:inputType = "text"
+            android:layout_below="@id/btnSwap"/>
+        <EditText
+            android:id = "@+id/etPort"
+            android:layout_width = "match_parent"
+            android:layout_height = "wrap_content"
+            android:hint = "Port No"
+            android:inputType = "number"
+            android:layout_below="@id/etIP"/>
+        <Button
+            android:id = "@+id/btnConnect"
+            android:layout_width = "match_parent"
+            android:layout_height = "wrap_content"
+            android:layout_gravity = "center"
+            android:layout_marginTop = "16dp"
+            android:text= "Connect To Server"
+            android:layout_below="@id/etPort"/>
+        <TextView
+            android:id = "@+id/tvMessages"
+            android:layout_width = "match_parent"
+            android:layout_height = "wrap_content"
+            android:inputType = "textMultiLine"
+            android:textAppearance = "@style/Base.TextAppearance.AppCompat.Medium"
+            android:layout_below="@id/btnConnect"/>
+
+<!--        <androidx.recyclerview.widget.RecyclerView-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:id="@+id/rcvMesseges"-->
+<!--            />-->
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:id="@+id/lstMessage"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="5dp"
+            android:layout_below="@id/tvMessages"
+            android:nestedScrollingEnabled="true"
+            android:background="@drawable/frame_message_border"
+            />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/lstMessage"
+            android:orientation="horizontal"
+            android:layout_alignParentBottom="true">
+            <EditText
+                android:id = "@+id/etMessage"
+                android:layout_width = "wrap_content"
+                android:layout_height = "wrap_content"
+                android:hint = "Enter Message"
+                android:inputType = "text"
+                android:layout_below="@id/lstMessage"
+                android:layout_weight="7"/>
+            <Button
+                android:id = "@+id/btnSend"
+                android:layout_width = "wrap_content"
+                android:layout_height = "wrap_content"
+                android:text = "SEND"
+                android:layout_weight="1"
+                />
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</ScrollView>
