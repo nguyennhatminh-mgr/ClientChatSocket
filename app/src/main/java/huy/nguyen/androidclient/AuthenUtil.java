@@ -8,13 +8,13 @@ import java.net.Socket;
 
 public class AuthenUtil {
     private static Socket socket;
-    public void setSocket(Socket socket){
+    public static void setSocket(Socket socket){
         socket = socket;
     }
-    public Socket getSocket(){
+    public static Socket getSocket(){
         return socket;
     }
-    public void doSignUp(String username, String password, String accountname, final SignupCallback callback){
+    public static void doSignUp(String username, String password, String accountname, final SignupCallback callback){
         try {
             PrintWriter output = new PrintWriter(socket.getOutputStream());
             final BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -42,4 +42,5 @@ public class AuthenUtil {
             e.printStackTrace();
         }
     }
+
 }
