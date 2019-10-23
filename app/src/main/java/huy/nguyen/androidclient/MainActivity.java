@@ -3,10 +3,10 @@ package huy.nguyen.androidclient;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +16,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+
+import huy.nguyen.androidclient.Message.MessageListViewAdapter;
+import huy.nguyen.androidclient.Model.Message;
+import huy.nguyen.androidclient.Model.User;
 
 @SuppressLint("SetTextI18n")
 public class MainActivity extends AppCompatActivity {
@@ -27,6 +32,17 @@ public class MainActivity extends AppCompatActivity {
     Button btnSwap;
     String SERVER_IP;
     int SERVER_PORT;
+
+    //Message
+//    ArrayList<Message> messageArrayList;
+//    RecyclerView rcvMessage;
+//    HomeUserAdpter messageAdpter;
+
+    //Message ListView
+    ArrayList<Message> messagesListView;
+    ListView listView;
+    MessageListViewAdapter messageListViewAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +54,17 @@ public class MainActivity extends AppCompatActivity {
         btnSend = findViewById(R.id.btnSend);
         btnSwap = findViewById(R.id.btnSwap);
         Button btnConnect = findViewById(R.id.btnConnect);
+
+        addControls();
+//        messageArrayList=new ArrayList<>();
+//        messageAdpter=new HomeUserAdpter(MainActivity.this,messageArrayList);
+//        rcvMessage.setAdapter(messageAdpter);
+//        rcvMessage.setLayoutManager(new LinearLayoutManager(MainActivity.this,LinearLayoutManager.VERTICAL,false));
+
+        messagesListView=new ArrayList<>();
+        messageListViewAdapter=new MessageListViewAdapter(MainActivity.this,messagesListView);
+        listView.setAdapter(messageListViewAdapter);
+
         btnConnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -65,7 +92,14 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
         });
+//        messageAdpter.notifyDataSetChanged();
     }
+
+    private void addControls() {
+//        rcvMessage=findViewById(R.id.rcvMesseges);
+        listView=findViewById(R.id.lstMessage);
+    }
+
 
     private PrintWriter output;
     private BufferedReader input;
@@ -91,27 +125,33 @@ public class MainActivity extends AppCompatActivity {
     class Thread2 implements Runnable {
         @Override
         public void run() {
-            Log.e("msg","go here ?");
+//            Log.e("msg","go here ?");
             while (true) {
-                Log.e("msg","adef");
+//                Log.e("msg","adef");
                 try {
                     final String message = input.readLine();
-                    Log.e("msg",message);
+//                    Log.e("msg",message);
                     if (message != null) {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                tvMessages.append("server: " + message + "\n");
+//                                tvMessages.append("server: " + message + "\n");
+                                User user=new User("server");
+                                Message messageReal=new Message(message,user,false);
+//                                messageArrayList.add(messageReal);
+//                                messageAdpter.notifyDataSetChanged();
+                                messagesListView.add(messageReal);
+                                messageListViewAdapter.notifyDataSetChanged();
                             }
                         });
                     } else {
-                        Log.e("msg","get a");
+//                        Log.e("msg","get a");
                         Thread1 = new Thread(new Thread1());
                         Thread1.start();
                         return;
                     }
                 } catch (IOException e) {
-                    Log.e("msg","get there");
+//                    Log.e("msg","get there");
                     e.printStackTrace();
                 }
             }
@@ -129,8 +169,14 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    tvMessages.append("client: " + message + "\n");
+//                    tvMessages.append("client: " + message + "\n");
                     etMessage.setText("");
+                    User user=new User("client");
+                    Message messageReal=new Message(message,user,true);
+//                    messageArrayList.add(messageReal);
+//                    messageAdpter.notifyDataSetChanged();
+                    messagesListView.add(messageReal);
+                    messageListViewAdapter.notifyDataSetChanged();
                 }
             });
         }
