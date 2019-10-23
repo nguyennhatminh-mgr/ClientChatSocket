@@ -91,12 +91,9 @@ public class MainActivity extends AppCompatActivity {
     class Thread2 implements Runnable {
         @Override
         public void run() {
-            Log.e("msg","go here ?");
             while (true) {
-                Log.e("msg","adef");
                 try {
                     final String message = input.readLine();
-                    Log.e("msg",message);
                     if (message != null) {
                         runOnUiThread(new Runnable() {
                             @Override
@@ -105,13 +102,11 @@ public class MainActivity extends AppCompatActivity {
                             }
                         });
                     } else {
-                        Log.e("msg","get a");
                         Thread1 = new Thread(new Thread1());
                         Thread1.start();
                         return;
                     }
                 } catch (IOException e) {
-                    Log.e("msg","get there");
                     e.printStackTrace();
                 }
             }
