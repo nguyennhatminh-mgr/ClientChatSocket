@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -14,9 +13,10 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.net.Socket;
 
-import huy.nguyen.androidclient.AuthenUtil;
+import huy.nguyen.androidclient.Utilities.AuthenUtil;
 import huy.nguyen.androidclient.R;
-import huy.nguyen.androidclient.SignupCallback;
+import huy.nguyen.androidclient.Utilities.LoginCallback;
+import huy.nguyen.androidclient.Utilities.SignupCallback;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -40,12 +40,26 @@ public class SignUpActivity extends AppCompatActivity {
         btnSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(SignUpActivity.this,"abc",Toast.LENGTH_SHORT).show();
-                AuthenUtil.doSignUp("a", "b", "c", new SignupCallback() {
+//                AuthenUtil.doSignUp("helloa", "b", "c", new SignupCallback() {
+//                    @Override
+//                    public void notifySignup(final String result) {
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                Toast.makeText(SignUpActivity.this,result,Toast.LENGTH_SHORT).show();
+//                            }
+//                        });
+//                    }
+//                });
+                AuthenUtil.doLogin("helloaa", "ba", new LoginCallback() {
                     @Override
-                    public void notify(String result) {
-                        Toast.makeText(SignUpActivity.this,result,Toast.LENGTH_SHORT).show();
-                        Log.e("ok",result);
+                    public void notifyLogin(final String result) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(SignUpActivity.this,result,Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     }
                 });
             }
@@ -59,7 +73,7 @@ public class SignUpActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Socket socket = new Socket("192.168.137.1",8080);
+                    Socket socket = new Socket("172.17.16.74",8080);
                     AuthenUtil.setSocket(socket);
                 } catch (IOException e) {
                     e.printStackTrace();
