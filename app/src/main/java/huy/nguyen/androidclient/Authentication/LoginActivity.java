@@ -11,14 +11,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.regex.Pattern;
 
-import huy.nguyen.androidclient.AuthenUtil;
 import huy.nguyen.androidclient.Home.HomeActivity;
 import huy.nguyen.androidclient.R;
-import huy.nguyen.androidclient.SignupCallback;
 
 public class LoginActivity extends AppCompatActivity {
 
