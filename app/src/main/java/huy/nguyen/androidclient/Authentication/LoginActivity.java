@@ -61,29 +61,6 @@ public class LoginActivity extends AppCompatActivity {
         return true;
     }
 
-    private void checkPassword(){
-        edtPassword.addTextChangedListener(new TextWatcher() {
-            private final Pattern pattern=Pattern.compile("[0-9a-zA-Z_]*");
-            private CharSequence mText;
-            private boolean isValid(CharSequence s){
-                return pattern.matcher(s).matches();
-            }
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-    }
     private void addControls() {
         edtUsername=findViewById(R.id.edtUsernameLogin);
         edtPassword=findViewById(R.id.edtPasswordLogin);
