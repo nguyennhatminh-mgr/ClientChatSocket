@@ -6,7 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class AuthenUtil {
+public class SocketUtil {
     private static Socket socket;
 
     public static void setSocket(Socket valuesocket) {
