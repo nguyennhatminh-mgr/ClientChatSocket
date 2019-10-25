@@ -2,11 +2,11 @@ package huy.nguyen.androidclient.Home;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -17,23 +17,20 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Map;
 
 import huy.nguyen.androidclient.MainActivity;
-import huy.nguyen.androidclient.Model.AllMessage;
-import huy.nguyen.androidclient.Model.Message;
 import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.R;
-import huy.nguyen.androidclient.ServerActivity;
 import huy.nguyen.androidclient.Utilities.Interface.OnlineUserCallback;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
+import huy.nguyen.androidclient.Utilities.SocketWriter;
 import huy.nguyen.androidclient.Utilities.ThreadManager;
 
 public class HomeActivity extends AppCompatActivity {
 
     ArrayList<UserInfo> userArrayList;
     HomeUserAdpter homeUserAdpter;
-    RecyclerView recyclerView;
+    ListView listView;
     Socket conn;
     ServerSocket serverSocket;
     Thread Thread1 = null;
@@ -48,11 +45,11 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        recyclerView = findViewById(R.id.rcvListUserInHome);
+        initMyServerSocket();
+        listView = findViewById(R.id.lvListUserInHome);
         userArrayList = new ArrayList<>();
         homeUserAdpter = new HomeUserAdpter(HomeActivity.this, userArrayList);
-        recyclerView.setAdapter(homeUserAdpter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(HomeActivity.this, LinearLayoutManager.VERTICAL, false));
+        listView.setAdapter(homeUserAdpter);
 //        fakeData();
         SocketUtil.retriveOnlineUser(new OnlineUserCallback() {
             @Override
@@ -69,7 +66,29 @@ public class HomeActivity extends AppCompatActivity {
 
             }
         });
-        initMyServerSocket();
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                final UserInfo info = (UserInfo) homeUserAdpter.getItem(position);
+                Intent intent = new Intent(HomeActivity.this, MainActivity.class);
+                if (info.isNewMessage()) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            PrintWriter writer = SocketWriter.writer.get(info.getIp());
+                            writer.write(RESPONSE_CHAT+"\n");
+                            writer.flush();
+                        }
+                    }).start();
+                    intent.putExtra("Create",false);
+                } else{
+                    intent.putExtra("Create",true);
+                }
+                intent.putExtra("PeerIp",info.getIp());
+                startActivity(intent);
+
+            }
+        });
     }
 
     private void initMyServerSocket() {
@@ -109,10 +128,13 @@ public class HomeActivity extends AppCompatActivity {
 
         public void run() {
             BufferedReader input;
+            PrintWriter writer;
             String[] arrIp = socket.getRemoteSocketAddress().toString().split(":");
             final String ip = arrIp[0].substring(1);
             try {
                 input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                writer = new PrintWriter(socket.getOutputStream());
+                SocketWriter.writer.put(ip,writer);
                 String msg;
                 while ((msg = input.readLine()) != null) {
                     if (msg.equals(REQUEST_CHAT)) {

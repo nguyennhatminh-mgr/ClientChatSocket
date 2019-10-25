@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String REQUEST_CHAT = "REQUEST_CHAT";
     private static final String RESPONSE_CHAT = "RESPONSE_CHAT";
+    private static final String END_CHAT = "END_CHAT";
 
     ArrayList<Message> messagesListView;
     ListView listView;
@@ -62,8 +63,8 @@ public class MainActivity extends AppCompatActivity {
         initSocket();
         addControls();
 
-        messagesListView=new ArrayList<>();
-        messageListViewAdapter=new MessageListViewAdapter(MainActivity.this,messagesListView);
+        messagesListView = new ArrayList<>();
+        messageListViewAdapter = new MessageListViewAdapter(MainActivity.this, messagesListView);
         listView.setAdapter(messageListViewAdapter);
 
         btnSend.setOnClickListener(new View.OnClickListener() {
@@ -71,8 +72,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String message = etMessage.getText().toString().trim();
                 if (!message.isEmpty()) {
-                    new Thread(new Thread3(message)).start();
-                    new ReqResThread().run();
+                    new Thread(new SendThread(message)).start();
+//                    new ReqResThread().run();
                 }
             }
         });
@@ -81,35 +82,63 @@ public class MainActivity extends AppCompatActivity {
     private void initSocket() {
         Intent intent = getIntent();
         final String ip = intent.getStringExtra("PeerIp");
-        Map<String, Socket> socketMap = SocketUtil.socketMap;
-        if (!socketMap.containsKey(ip)){
+        final Map<String, Socket> socketMap = SocketUtil.socketMap;
+        if (!socketMap.containsKey(ip)) {
             Toast.makeText(this, ip, Toast.LENGTH_SHORT).show();
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         socket = new Socket(ip, 8080);
-                        SocketUtil.socketMap.put(ip,socket);
+                        SocketUtil.socketMap.put(ip, socket);
                         output = new PrintWriter(socket.getOutputStream());
-                        Log.e("123", "get a" );
+                        input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 //                        EchoThread thread = new EchoThread(socket)
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }).start();
-        } else{
-
+        } else {
+            new ReceiverThread().run();
         }
     }
 
     private void addControls() {
-        listView=findViewById(R.id.lstMessage);
+        listView = findViewById(R.id.lstMessage);
     }
 
 
+    class ReceiverThread implements Runnable {
+        @Override
+        public void run() {
+            String msg;
+            while (true) {
+                try {
+                    final String message = input.readLine();
+                    if (message != null) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                User user = new User("server");
+                                Message messageReal = new Message(message, user, false);
+                                messagesListView.add(messageReal);
+                                messageListViewAdapter.notifyDataSetChanged();
+                            }
+                        });
+                        if (message.equals(END_CHAT)){
+                            break;
+                        }
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
 
+        }
+    }
 
 
     class Thread1 implements Runnable {
@@ -131,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
     class Thread2 implements Runnable {
         @Override
         public void run() {
@@ -145,8 +175,8 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void run() {
 //                                tvMessages.append("server: " + message + "\n");
-                                User user=new User("server");
-                                Message messageReal=new Message(message,user,false);
+                                User user = new User("server");
+                                Message messageReal = new Message(message, user, false);
 //                                messageArrayList.add(messageReal);
 //                                messageAdpter.notifyDataSetChanged();
                                 messagesListView.add(messageReal);
@@ -166,22 +196,26 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-    class Thread3 implements Runnable {
+
+
+    class SendThread implements Runnable {
         private String message;
-        Thread3(String message) {
+
+        SendThread(String message) {
             this.message = message;
         }
+
         @Override
         public void run() {
-            output.write(message+"\n");
+            output.write(message + "\n");
             output.flush();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
 //                    tvMessages.append("client: " + message + "\n");
                     etMessage.setText("");
-                    User user=new User("client");
-                    Message messageReal=new Message(message,user,true);
+                    User user = new User("client");
+                    Message messageReal = new Message(message, user, true);
 //                    messageArrayList.add(messageReal);
 //                    messageAdpter.notifyDataSetChanged();
                     messagesListView.add(messageReal);
@@ -191,16 +225,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    class ReqResThread implements Runnable{
-
+    class ReqResThread implements Runnable {
         @Override
         public void run() {
-            output.write(REQUEST_CHAT+"\n");
+            output.write(REQUEST_CHAT + "\n");
             output.flush();
-            while (true){
+            while (true) {
                 try {
                     String res = input.readLine();
-                    if (res.equals(RESPONSE_CHAT)){
+                    if (res.equals(RESPONSE_CHAT)) {
+                        new ReceiverThread().run();
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
