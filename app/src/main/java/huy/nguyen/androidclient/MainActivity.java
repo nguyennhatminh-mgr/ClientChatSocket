@@ -26,6 +26,7 @@ import huy.nguyen.androidclient.Message.MessageListViewAdapter;
 import huy.nguyen.androidclient.Model.Message;
 import huy.nguyen.androidclient.Model.User;
 import huy.nguyen.androidclient.Utilities.EchoThread;
+import huy.nguyen.androidclient.Utilities.Interface.ActiveCallback;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
 
 @SuppressLint("SetTextI18n")
@@ -40,13 +41,16 @@ public class MainActivity extends AppCompatActivity {
     int SERVER_PORT;
     Socket socket;
     PrintWriter output;
-    private static final String NOTICE_MSG = "NOTICE_MSG";
-    private static final String END_MSG = "END_MSG";
-    private static final String END_SOCKET = "END_SOCKET";
+    private BufferedReader input;
+
+    private static final String REQUEST_CHAT = "REQUEST_CHAT";
+    private static final String RESPONSE_CHAT = "RESPONSE_CHAT";
 
     ArrayList<Message> messagesListView;
     ListView listView;
     public static MessageListViewAdapter messageListViewAdapter;
+    public ActiveCallback callback;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,10 +61,6 @@ public class MainActivity extends AppCompatActivity {
         btnSend = findViewById(R.id.btnSend);
         initSocket();
         addControls();
-//        messageArrayList=new ArrayList<>();
-//        messageAdpter=new HomeUserAdpter(MainActivity.this,messageArrayList);
-//        rcvMessage.setAdapter(messageAdpter);
-//        rcvMessage.setLayoutManager(new LinearLayoutManager(MainActivity.this,LinearLayoutManager.VERTICAL,false));
 
         messagesListView=new ArrayList<>();
         messageListViewAdapter=new MessageListViewAdapter(MainActivity.this,messagesListView);
@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                 String message = etMessage.getText().toString().trim();
                 if (!message.isEmpty()) {
                     new Thread(new Thread3(message)).start();
-
+                    new ReqResThread().run();
                 }
             }
         });
@@ -112,20 +112,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private BufferedReader input;
     class Thread1 implements Runnable {
         public void run() {
             Socket socket;
@@ -187,9 +173,7 @@ public class MainActivity extends AppCompatActivity {
         }
         @Override
         public void run() {
-            output.write(NOTICE_MSG+"\n");
             output.write(message+"\n");
-            output.write(END_MSG+"\n");
             output.flush();
             runOnUiThread(new Runnable() {
                 @Override
@@ -206,4 +190,31 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     }
+
+    class ReqResThread implements Runnable{
+
+        @Override
+        public void run() {
+            output.write(REQUEST_CHAT+"\n");
+            output.flush();
+            while (true){
+                try {
+                    String res = input.readLine();
+                    if (res.equals(RESPONSE_CHAT)){
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                            }
+                        });
+                        break;
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+
 }

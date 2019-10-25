@@ -6,6 +6,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -37,6 +39,9 @@ public class HomeActivity extends AppCompatActivity {
     private static final String NOTICE_MSG = "NOTICE_MSG";
     private static final String END_MSG = "END_MSG";
     private static final String END_SOCKET = "END_SOCKET";
+
+    private static final String REQUEST_CHAT = "REQUEST_CHAT";
+    private static final String RESPONSE_CHAT = "RESPONSE_CHAT";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +84,9 @@ public class HomeActivity extends AppCompatActivity {
                 serverSocket = new ServerSocket(8080);
                 try {
                     socket = serverSocket.accept();
-                    Log.e("123", "new user " );
+                    String[] arrIp = socket.getRemoteSocketAddress().toString().split(":");
+                    String ip = arrIp[0].substring(1);
+                    SocketUtil.socketMap.put(ip,socket);
                     new ServerThread(socket).start();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -105,16 +112,8 @@ public class HomeActivity extends AppCompatActivity {
             try {
                 input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 String msg;
-                while (!(msg = input.readLine()).equals(END_SOCKET)) {
-                    if (msg.equals(NOTICE_MSG)) {
-                        ArrayList<Message> curMess;
-                        Map<String, ArrayList<Message>> all = AllMessage.allMessage;
-                        if (all.containsKey(ip)) curMess = all.get(ip);
-                        else curMess = new ArrayList<>();
-                        while (!(msg = input.readLine()).equals(END_MSG)) {
-                            curMess.add(new Message(msg, false));
-                        }
-                        AllMessage.allMessage.put(ip, curMess);
+                while ((msg = input.readLine()) != null) {
+                    if (msg.equals(REQUEST_CHAT)) {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -127,11 +126,12 @@ public class HomeActivity extends AppCompatActivity {
                                     }
                                 }
                                 homeUserAdpter.notifyDataSetChanged();
-                                MainActivity.messageListViewAdapter.notifyDataSetChanged();
                             }
                         });
+                        break;
                     }
                 }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
