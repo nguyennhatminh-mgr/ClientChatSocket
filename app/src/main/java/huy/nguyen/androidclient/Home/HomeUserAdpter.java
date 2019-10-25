@@ -1,87 +1,54 @@
 package huy.nguyen.androidclient.Home;
 
+import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.BaseAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
-import huy.nguyen.androidclient.MainActivity;
 import huy.nguyen.androidclient.Model.Message;
-import huy.nguyen.androidclient.Model.User;
 import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.R;
 
-public class HomeUserAdpter extends RecyclerView.Adapter<HomeUserAdpter.MessageViewHolder> {
-
-    ArrayList<UserInfo> usersList;
+public class HomeUserAdpter extends BaseAdapter {
+    ArrayList<UserInfo> userInfos;
     Context context;
-    public HomeUserAdpter(Context context, ArrayList<UserInfo> arrayList){
-        this.context=context;
-        this.usersList=arrayList;
-    }
 
-//    public void add(Message message){
-//        this.messageList.add(message);
-//        notifyDataSetChanged();
-//    }
-    @NonNull
-    @Override
-    public MessageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view=View.inflate(parent.getContext(),R.layout.item_user_in_home,null);
-        return new MessageViewHolder(view,viewType);
+    public HomeUserAdpter(Context context,ArrayList<UserInfo> userInfos) {
+        this.userInfos = userInfos;
+        this.context = context;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
-        final UserInfo user=usersList.get(position);
-        holder.txtAccountname.setText(user.getAccountname());
-        if (user.isNewMessage()) holder.imgStatusMessage.setVisibility(View.VISIBLE);
-        else holder.imgStatusMessage.setVisibility(View.INVISIBLE);
-//        holder.imgItemMessage.setImageResource(message.getUser().getUrl());
-        holder.setItemClickListener(new ItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                Toast.makeText(context,"Click"+position,Toast.LENGTH_SHORT).show();
-                Intent intent=new Intent(view.getContext(), MainActivity.class);
-                intent.putExtra("PeerIp",user.getIp());
-                view.getContext().startActivity(intent);
-            }
-        });
+    public int getCount() {
+        return userInfos.size();
     }
 
     @Override
-    public int getItemCount() {
-        return usersList.size();
+    public Object getItem(int i) {
+        return userInfos.get(i);
     }
 
-    public class MessageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    @Override
+    public long getItemId(int i) {
+        return i;
+    }
 
-        TextView txtAccountname;
-        ImageView imgOfUser;
-        ImageView imgStatusMessage;
-        ItemClickListener itemClickListener;
-        public MessageViewHolder(@NonNull View itemView, int viewType) {
-            super(itemView);
-            txtAccountname=itemView.findViewById(R.id.txtAccountnameInHomeItem);
-            imgOfUser=itemView.findViewById(R.id.imgUserInHomeItem);
-            imgStatusMessage = itemView.findViewById(R.id.imgStatusMessage);
-            itemView.setOnClickListener(this);
-        }
-        public void setItemClickListener(ItemClickListener itemClickListener){
-            this.itemClickListener=itemClickListener;
-        }
+    @Override
+    public View getView(int i, View view, ViewGroup viewGroup) {
+        LayoutInflater layoutInflater= (LayoutInflater) context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
+        UserInfo userInfo=userInfos.get(i);
+        view=layoutInflater.inflate(R.layout.item_user_in_home,null);
+        TextView txtAccountname=view.findViewById(R.id.txtAccountnameInHomeItem);
+        txtAccountname.setText(userInfo.getAccountname());
 
-        @Override
-        public void onClick(View view) {
-            itemClickListener.onClick(view,getAdapterPosition());
-        }
+        return view;
     }
 }
+//class MessageListViewHolder{
+//
+//}
