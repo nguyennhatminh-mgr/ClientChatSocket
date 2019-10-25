@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,7 +28,9 @@ import huy.nguyen.androidclient.Model.Message;
 import huy.nguyen.androidclient.Model.User;
 import huy.nguyen.androidclient.Utilities.EchoThread;
 import huy.nguyen.androidclient.Utilities.Interface.ActiveCallback;
+import huy.nguyen.androidclient.Utilities.SocketReader;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
+import huy.nguyen.androidclient.Utilities.SocketWriter;
 
 @SuppressLint("SetTextI18n")
 public class MainActivity extends AppCompatActivity {
@@ -41,10 +44,13 @@ public class MainActivity extends AppCompatActivity {
     int SERVER_PORT;
     Socket socket;
     PrintWriter output;
+    LinearLayout top,bottom;
     private BufferedReader input;
+
 
     private static final String REQUEST_CHAT = "REQUEST_CHAT";
     private static final String RESPONSE_CHAT = "RESPONSE_CHAT";
+
     private static final String END_CHAT = "END_CHAT";
 
     ArrayList<Message> messagesListView;
@@ -60,8 +66,11 @@ public class MainActivity extends AppCompatActivity {
         tvMessages = findViewById(R.id.tvMessages);
         etMessage = findViewById(R.id.etMessage);
         btnSend = findViewById(R.id.btnSend);
-        initSocket();
+        top = findViewById(R.id.alert);
+        bottom = findViewById(R.id.lyBot);
         addControls();
+
+        initSocket();
 
         messagesListView = new ArrayList<>();
         messageListViewAdapter = new MessageListViewAdapter(MainActivity.this, messagesListView);
@@ -94,13 +103,19 @@ public class MainActivity extends AppCompatActivity {
                         output = new PrintWriter(socket.getOutputStream());
                         input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 //                        EchoThread thread = new EchoThread(socket)
+                        new Thread(new ReqResThread()).start();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }).start();
         } else {
-            new ReceiverThread().run();
+            top.setVisibility(View.GONE);
+            bottom.setVisibility(View.VISIBLE);
+            listView.setVisibility(View.VISIBLE);
+            output = SocketWriter.writer.get(ip);
+            input = SocketReader.reader.get(ip);
+            new Thread(new ReceiverThread()).start();
         }
     }
 
@@ -115,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
             String msg;
             while (true) {
                 try {
+//                    input = SocketReader.reader.get(ip)
                     final String message = input.readLine();
                     if (message != null) {
                         runOnUiThread(new Runnable() {
@@ -157,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
                 new Thread(new Thread2()).start();
             } catch (IOException e) {
                 e.printStackTrace();
+                Log.e("123","error 3 "+e);
             }
         }
     }
@@ -191,6 +208,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } catch (IOException e) {
 //                    Log.e("msg","get there");
+                    Log.e("123","error 4 "+e);
                     e.printStackTrace();
                 }
             }
@@ -229,21 +247,27 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             output.write(REQUEST_CHAT + "\n");
+            Log.e("123", "ran " );
             output.flush();
             while (true) {
                 try {
                     String res = input.readLine();
+                    Log.e("123", res);
                     if (res.equals(RESPONSE_CHAT)) {
-                        new ReceiverThread().run();
+                        Log.e("123", "gg3");
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-
+                                top.setVisibility(View.GONE);
+                                bottom.setVisibility(View.VISIBLE);
+                                listView.setVisibility(View.VISIBLE);
                             }
                         });
+                        new ReceiverThread().run();
                         break;
                     }
                 } catch (IOException e) {
+                    Log.e("123","error 5 "+e);
                     e.printStackTrace();
                 }
             }

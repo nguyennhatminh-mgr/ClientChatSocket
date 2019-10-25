@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -22,6 +23,7 @@ import huy.nguyen.androidclient.MainActivity;
 import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.R;
 import huy.nguyen.androidclient.Utilities.Interface.OnlineUserCallback;
+import huy.nguyen.androidclient.Utilities.SocketReader;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
 import huy.nguyen.androidclient.Utilities.SocketWriter;
 import huy.nguyen.androidclient.Utilities.ThreadManager;
@@ -36,10 +38,12 @@ public class HomeActivity extends AppCompatActivity {
     Thread Thread1 = null;
     private static final String NOTICE_MSG = "NOTICE_MSG";
     private static final String END_MSG = "END_MSG";
-    private static final String END_SOCKET = "END_SOCKET";
 
     private static final String REQUEST_CHAT = "REQUEST_CHAT";
     private static final String RESPONSE_CHAT = "RESPONSE_CHAT";
+    private static final String END_SOCKET = "END_SOCKET";
+
+    private boolean res = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +84,6 @@ public class HomeActivity extends AppCompatActivity {
                             writer.flush();
                         }
                     }).start();
-                    intent.putExtra("Create",false);
                 } else{
                     intent.putExtra("Create",true);
                 }
@@ -107,6 +110,10 @@ public class HomeActivity extends AppCompatActivity {
                     String[] arrIp = socket.getRemoteSocketAddress().toString().split(":");
                     String ip = arrIp[0].substring(1);
                     SocketUtil.socketMap.put(ip,socket);
+                    BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    SocketReader.reader.put(ip,input);
+                    PrintWriter writer = new PrintWriter(socket.getOutputStream());
+                    SocketWriter.writer.put(ip,writer);
                     ServerThread serverThread = new ServerThread(socket);
                     ThreadManager.threadList.put(ip,serverThread);
                     serverThread.start();
@@ -114,10 +121,13 @@ public class HomeActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             } catch (IOException e) {
+                Log.e("123","error 1 "+e);
+
                 e.printStackTrace();
             }
         }
     }
+
 
     private class ServerThread extends Thread {
         private Socket socket;
@@ -132,31 +142,26 @@ public class HomeActivity extends AppCompatActivity {
             String[] arrIp = socket.getRemoteSocketAddress().toString().split(":");
             final String ip = arrIp[0].substring(1);
             try {
-                input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                writer = new PrintWriter(socket.getOutputStream());
-                SocketWriter.writer.put(ip,writer);
+                input = SocketReader.reader.get(ip);
+                writer = SocketWriter.writer.get(ip);
+//                writer = new PrintWriter(socket.getOutputStream());
                 String msg;
-                while ((msg = input.readLine()) != null) {
+                while (true){
+                    msg=input.readLine();
                     if (msg.equals(REQUEST_CHAT)) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                for (int i = 0; i < userArrayList.size(); i++) {
-                                    UserInfo info = userArrayList.get(i);
-                                    if (info.getIp().equals(ip)) {
-                                        info.setNewMessage(true);
-                                        userArrayList.set(i, info);
-                                        break;
-                                    }
-                                }
-                                homeUserAdpter.notifyDataSetChanged();
+                        for (int i=0;i<userArrayList.size();i++){
+                            UserInfo info = userArrayList.get(i);
+                            if (info.getIp().equals(ip)){
+                                info.setNewMessage(true);
+                                break;
                             }
-                        });
+                        }
                         break;
                     }
                 }
 
             } catch (Exception e) {
+                Log.e("123","error 2 "+e);
                 e.printStackTrace();
             }
         }
