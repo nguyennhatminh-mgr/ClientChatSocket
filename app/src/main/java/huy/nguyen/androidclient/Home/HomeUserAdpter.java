@@ -1,6 +1,7 @@
 package huy.nguyen.androidclient.Home;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -12,15 +13,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
+import huy.nguyen.androidclient.MainActivity;
 import huy.nguyen.androidclient.Model.Message;
 import huy.nguyen.androidclient.Model.User;
+import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.R;
 
 public class HomeUserAdpter extends RecyclerView.Adapter<HomeUserAdpter.MessageViewHolder> {
 
-    ArrayList<User> usersList;
+    ArrayList<UserInfo> usersList;
     Context context;
-    public HomeUserAdpter(Context context, ArrayList<User> arrayList){
+    public HomeUserAdpter(Context context, ArrayList<UserInfo> arrayList){
         this.context=context;
         this.usersList=arrayList;
     }
@@ -38,13 +41,15 @@ public class HomeUserAdpter extends RecyclerView.Adapter<HomeUserAdpter.MessageV
 
     @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
-        User user=usersList.get(position);
-        holder.txtAccountname.setText(user.getName());
+        UserInfo user=usersList.get(position);
+        holder.txtAccountname.setText(user.getAccountname());
 //        holder.imgItemMessage.setImageResource(message.getUser().getUrl());
         holder.setItemClickListener(new ItemClickListener() {
             @Override
             public void onClick(View view, int position) {
                 Toast.makeText(context,"Click"+position,Toast.LENGTH_SHORT).show();
+                Intent intent=new Intent(view.getContext(), MainActivity.class);
+                view.getContext().startActivity(intent);
             }
         });
     }

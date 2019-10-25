@@ -13,6 +13,10 @@ public class UserInfo implements Serializable {
     public UserInfo() {
     }
 
+    public UserInfo(String accountname) {
+        this.accountname = accountname;
+    }
+
     public UserInfo(String accountname, String ip) {
         this.accountname = accountname;
         this.ip = ip;

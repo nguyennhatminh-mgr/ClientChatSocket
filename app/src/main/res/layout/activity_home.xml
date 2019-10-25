@@ -6,21 +6,46 @@
     android:layout_height="match_parent"
     tools:context=".Home.HomeActivity"
     android:orientation="vertical"
-    android:padding="20dp">
-    <EditText
+    android:paddingTop="20dp"
+    android:paddingLeft="5dp"
+    android:paddingRight="5dp"
+    android:paddingBottom="10dp"
+    >
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/edtAccountNameHome"
-        android:drawableStart="@drawable/ic_change_account_name"
-        android:padding="10dp"
+        android:orientation="horizontal"
         android:background="@drawable/frame_message_border"
-        />
+        android:paddingLeft="10dp"
+        android:paddingRight="5dp"
+        android:paddingBottom="5dp"
+        android:paddingTop="3dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Welcome:"
+            android:layout_marginRight="5dp"
+            android:textSize="22dp"
+            android:textColor="@color/textColor"
+            />
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/edtAccountNameHome"
+            android:drawableStart="@drawable/ic_change_account_name"
+            android:padding="5dp"
+            android:text="Name"
+            android:backgroundTint="@color/backgroundMessage"/>
+    </LinearLayout>
+
     <TextView
+        android:layout_marginLeft="5dp"
         android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="List user is online"
-        android:textSize="18dp"/>
+        android:text="List users online"
+        android:textSize="22dp"
+        android:textColor="@color/textColor"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:layout_marginTop="10dp"
@@ -28,5 +53,6 @@
         android:layout_height="wrap_content"
         android:background="@drawable/frame_message_border"
         android:padding="10dp"
-        android:id="@+id/rcvListUserInHome"/>
+        android:id="@+id/rcvListUserInHome"
+        />
 </LinearLayout>

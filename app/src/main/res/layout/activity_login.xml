@@ -45,6 +45,7 @@
         android:textColor="@color/textLoginColor"
         android:textColorHint="@color/textLoginColor"
         tools:ignore="Autofill"
+        android:inputType="textPassword"
         />
 
     <Button
@@ -71,7 +72,7 @@
             android:layout_height="wrap_content"
             android:text="Sign up"
             android:textColor="@color/textLoginColor"
-            android:textSize="17dp"
+            android:textSize="20dp"
             android:id="@+id/txtClickSignUpInLogin"/>
     </LinearLayout>
 </LinearLayout>

@@ -11,5 +11,6 @@
         android:background="@drawable/my_message"
         android:padding="10dp"
         android:textColor="#fff"
-        android:layout_marginLeft="100dp"/>
+        android:layout_marginLeft="100dp"
+        android:layout_marginRight="5dp"/>
 </LinearLayout>

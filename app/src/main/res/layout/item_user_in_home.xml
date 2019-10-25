@@ -4,17 +4,23 @@
     android:orientation="horizontal" android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="left|center"
+    android:layout_margin="5dp"
+    android:paddingTop="5dp"
+    android:paddingBottom="5dp"
     >
 
     <ImageView
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
         app:srcCompat="@drawable/ic_person_black_24dp"
-        android:id="@+id/imgUserInHomeItem"/>
+        android:id="@+id/imgUserInHomeItem"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/border_avatar_user"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Account name"
-        android:textSize="15dp"
-        android:id="@+id/txtAccountnameInHomeItem"/>
+        android:textSize="22dp"
+        android:id="@+id/txtAccountnameInHomeItem"
+        android:textColor="@color/textColor"/>
 </LinearLayout>
