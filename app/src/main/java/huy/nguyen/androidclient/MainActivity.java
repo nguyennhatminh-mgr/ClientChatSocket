@@ -50,13 +50,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        etIP = findViewById(R.id.etIP);
-        etPort = findViewById(R.id.etPort);
+//        etIP = findViewById(R.id.etIP);
+//        etPort = findViewById(R.id.etPort);
         tvMessages = findViewById(R.id.tvMessages);
         etMessage = findViewById(R.id.etMessage);
         btnSend = findViewById(R.id.btnSend);
-        btnSwap = findViewById(R.id.btnSwap);
-        Button btnConnect = findViewById(R.id.btnConnect);
+//        btnSwap = findViewById(R.id.btnSwap);
+//        Button btnConnect = findViewById(R.id.btnConnect);
 
         addControls();
 //        messageArrayList=new ArrayList<>();
@@ -70,16 +70,16 @@ public class MainActivity extends AppCompatActivity {
 
         socket=SocketUtil.getSocket();
 
-        btnConnect.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                tvMessages.setText("");
-                SERVER_IP = etIP.getText().toString().trim();
-                SERVER_PORT = Integer.parseInt(etPort.getText().toString().trim());
-                Thread1 = new Thread(new Thread1());
-                Thread1.start();
-            }
-        });
+//        btnConnect.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                tvMessages.setText("");
+//                SERVER_IP = etIP.getText().toString().trim();
+//                SERVER_PORT = Integer.parseInt(etPort.getText().toString().trim());
+//                Thread1 = new Thread(new Thread1());
+//                Thread1.start();
+//            }
+//        });
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -89,14 +89,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        btnSwap.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this,ServerActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
+//        btnSwap.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent intent = new Intent(MainActivity.this,ServerActivity.class);
+//                startActivity(intent);
+//                finish();
+//            }
+//        });
 //        messageAdpter.notifyDataSetChanged();
     }
 
