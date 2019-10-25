@@ -3,6 +3,8 @@ package huy.nguyen.androidclient.Authentication;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -11,60 +13,90 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.regex.Pattern;
 
 import huy.nguyen.androidclient.Home.HomeActivity;
 import huy.nguyen.androidclient.R;
+import huy.nguyen.androidclient.Utilities.LoginCallback;
+import huy.nguyen.androidclient.Utilities.SocketUtil;
 
 public class LoginActivity extends AppCompatActivity {
 
-    EditText edtUsername,edtPassword;
+    EditText edtUsername, edtPassword;
     Button btnLogin;
     TextView txtSignUp;
+    int checkUsername = 0;
+    int checkPassword = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        createSocket();
         addControls();
         txtSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent=new Intent(LoginActivity.this,SignUpActivity.class);
+                Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
                 startActivity(intent);
                 finish();
             }
         });
+        checkRegression();
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(checkNull()){
-                    Intent intent=new Intent(LoginActivity.this, HomeActivity.class);
-                    startActivity(intent);
-                    finish();
+                if (checkNull()) {
+                    SocketUtil.doLogin(edtUsername.getText().toString(), edtPassword.getText().toString(), new LoginCallback() {
+                        @Override
+                        public void notifyLogin(final String result) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (result.equals("LOGIN_SUCCESS")) {
+                                        Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                                        startActivity(intent);
+                                        finish();
+                                    } else if (result.equals("LOGIN_FAIL_PASSWORD")) {
+                                        edtPassword.setError("Password is wrong");
+//                                Toast.makeText(LoginActivity.this,"Password is wrong",Toast.LENGTH_SHORT).show();
+                                    } else if (result.equals("LOGIN_FAIL_USERNAME")) {
+                                        edtUsername.setError("Username is wrong");
+//                                Toast.makeText(LoginActivity.this,"Username is wrong",Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            });
+
+                        }
+                    });
+
                 }
             }
         });
     }
-    private boolean checkNull(){
-        if(TextUtils.isEmpty(edtUsername.getText().toString())){
-            edtUsername.setError("Username is null");
+
+    private boolean checkNull() {
+        if (TextUtils.isEmpty(edtUsername.getText().toString())) {
+            edtUsername.setError("Username is not null");
             return false;
         }
-        if(TextUtils.isEmpty(edtPassword.getText().toString())){
-            edtPassword.setError("Password is null");
+        if (TextUtils.isEmpty(edtPassword.getText().toString())) {
+            edtPassword.setError("Password is not null");
             return false;
         }
         return true;
     }
 
-    private void checkPassword(){
-        edtPassword.addTextChangedListener(new TextWatcher() {
-            private final Pattern pattern=Pattern.compile("[0-9a-zA-Z_]*");
-            private CharSequence mText;
-            private boolean isValid(CharSequence s){
-                return pattern.matcher(s).matches();
-            }
+    private void checkRegression() {
+        edtUsername.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -77,15 +109,67 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable editable) {
+                if (edtUsername.getText().toString().matches("[0-9a-zA-Z_]+")) {
+                    checkUsername = 1;
+                } else {
+                    edtUsername.setError("Not valid username");
+                }
+            }
+        });
+        edtPassword.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (edtPassword.getText().toString().matches("([0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z])*")) {
+                    checkPassword = 1;
+                } else {
+                    edtPassword.setError("Password is at least 6 characters");
+                }
             }
         });
     }
-    private void addControls() {
-        edtUsername=findViewById(R.id.edtUsernameLogin);
-        edtPassword=findViewById(R.id.edtPasswordLogin);
-        btnLogin=findViewById(R.id.btnLogin);
-        txtSignUp=findViewById(R.id.txtClickSignUpInLogin);
 
+    private void addControls() {
+        edtUsername = findViewById(R.id.edtUsernameLogin);
+        edtPassword = findViewById(R.id.edtPasswordLogin);
+        btnLogin = findViewById(R.id.btnLogin);
+        txtSignUp = findViewById(R.id.txtClickSignUpInLogin);
+        Intent intent = getIntent();
+        if (intent.hasExtra("username")) {
+            edtUsername.setText(intent.getStringExtra("username"));
+            edtPassword.setText(intent.getStringExtra("password"));
+        }
+    }
+
+    private String getLocalIpAddress() throws UnknownHostException {
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        assert wifiManager != null;
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        int ipInt = wifiInfo.getIpAddress();
+        return InetAddress.getByAddress(ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(ipInt).array()).getHostAddress();
+    }
+
+    private void createSocket() {
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Socket socket = new Socket("192.168.137.1", 8080);
+                    SocketUtil.setSocket(socket);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 }

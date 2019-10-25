@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import huy.nguyen.androidclient.Message.MessageListViewAdapter;
 import huy.nguyen.androidclient.Model.Message;
 import huy.nguyen.androidclient.Model.User;
+import huy.nguyen.androidclient.Utilities.SocketUtil;
 
 @SuppressLint("SetTextI18n")
 public class MainActivity extends AppCompatActivity {
@@ -28,10 +30,11 @@ public class MainActivity extends AppCompatActivity {
     EditText etIP, etPort;
     TextView tvMessages;
     EditText etMessage;
-    Button btnSend;
+    ImageView btnSend;
     Button btnSwap;
     String SERVER_IP;
     int SERVER_PORT;
+    Socket socket;
 
     //Message
 //    ArrayList<Message> messageArrayList;
@@ -64,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
         messagesListView=new ArrayList<>();
         messageListViewAdapter=new MessageListViewAdapter(MainActivity.this,messagesListView);
         listView.setAdapter(messageListViewAdapter);
+
+        socket=SocketUtil.getSocket();
 
         btnConnect.setOnClickListener(new View.OnClickListener() {
             @Override
