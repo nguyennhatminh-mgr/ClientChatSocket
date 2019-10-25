@@ -11,6 +11,11 @@ public class Message {
         this.belongsToCurrentUser = belongsToCurrentUser;
     }
 
+    public Message(String textMessage, boolean belongsToCurrentUser) {
+        this.textMessage = textMessage;
+        this.belongsToCurrentUser = belongsToCurrentUser;
+    }
+
     public String getTextMessage() {
         return textMessage;
     }

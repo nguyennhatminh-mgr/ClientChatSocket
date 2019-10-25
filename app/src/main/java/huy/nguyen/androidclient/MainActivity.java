@@ -3,12 +3,14 @@ package huy.nguyen.androidclient;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -18,10 +20,12 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Map;
 
 import huy.nguyen.androidclient.Message.MessageListViewAdapter;
 import huy.nguyen.androidclient.Model.Message;
 import huy.nguyen.androidclient.Model.User;
+import huy.nguyen.androidclient.Utilities.EchoThread;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
 
 @SuppressLint("SetTextI18n")
@@ -35,29 +39,23 @@ public class MainActivity extends AppCompatActivity {
     String SERVER_IP;
     int SERVER_PORT;
     Socket socket;
+    PrintWriter output;
+    private static final String NOTICE_MSG = "NOTICE_MSG";
+    private static final String END_MSG = "END_MSG";
+    private static final String END_SOCKET = "END_SOCKET";
 
-    //Message
-//    ArrayList<Message> messageArrayList;
-//    RecyclerView rcvMessage;
-//    HomeUserAdpter messageAdpter;
-
-    //Message ListView
     ArrayList<Message> messagesListView;
     ListView listView;
-    MessageListViewAdapter messageListViewAdapter;
+    public static MessageListViewAdapter messageListViewAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        etIP = findViewById(R.id.etIP);
-//        etPort = findViewById(R.id.etPort);
         tvMessages = findViewById(R.id.tvMessages);
         etMessage = findViewById(R.id.etMessage);
         btnSend = findViewById(R.id.btnSend);
-//        btnSwap = findViewById(R.id.btnSwap);
-//        Button btnConnect = findViewById(R.id.btnConnect);
-
+        initSocket();
         addControls();
 //        messageArrayList=new ArrayList<>();
 //        messageAdpter=new HomeUserAdpter(MainActivity.this,messageArrayList);
@@ -68,45 +66,65 @@ public class MainActivity extends AppCompatActivity {
         messageListViewAdapter=new MessageListViewAdapter(MainActivity.this,messagesListView);
         listView.setAdapter(messageListViewAdapter);
 
-        socket=SocketUtil.getSocket();
-
-//        btnConnect.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                tvMessages.setText("");
-//                SERVER_IP = etIP.getText().toString().trim();
-//                SERVER_PORT = Integer.parseInt(etPort.getText().toString().trim());
-//                Thread1 = new Thread(new Thread1());
-//                Thread1.start();
-//            }
-//        });
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String message = etMessage.getText().toString().trim();
                 if (!message.isEmpty()) {
                     new Thread(new Thread3(message)).start();
+
                 }
             }
         });
-//        btnSwap.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent intent = new Intent(MainActivity.this,ServerActivity.class);
-//                startActivity(intent);
-//                finish();
-//            }
-//        });
-//        messageAdpter.notifyDataSetChanged();
+    }
+
+    private void initSocket() {
+        Intent intent = getIntent();
+        final String ip = intent.getStringExtra("PeerIp");
+        Map<String, Socket> socketMap = SocketUtil.socketMap;
+        if (!socketMap.containsKey(ip)){
+            Toast.makeText(this, ip, Toast.LENGTH_SHORT).show();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        socket = new Socket(ip, 8080);
+                        SocketUtil.socketMap.put(ip,socket);
+                        output = new PrintWriter(socket.getOutputStream());
+                        Log.e("123", "get a" );
+//                        EchoThread thread = new EchoThread(socket)
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        } else{
+
+        }
     }
 
     private void addControls() {
-//        rcvMessage=findViewById(R.id.rcvMesseges);
         listView=findViewById(R.id.lstMessage);
     }
 
 
-    private PrintWriter output;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private BufferedReader input;
     class Thread1 implements Runnable {
         public void run() {
@@ -169,7 +187,9 @@ public class MainActivity extends AppCompatActivity {
         }
         @Override
         public void run() {
+            output.write(NOTICE_MSG+"\n");
             output.write(message+"\n");
+            output.write(END_MSG+"\n");
             output.flush();
             runOnUiThread(new Runnable() {
                 @Override

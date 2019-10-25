@@ -9,7 +9,7 @@ import java.io.Serializable;
 public class UserInfo implements Serializable {
     private String accountname;
     private String ip;
-
+    private boolean newMessage = false;
     public UserInfo() {
     }
 
@@ -41,6 +41,14 @@ public class UserInfo implements Serializable {
     public static UserInfo parseUser(String userString){
         String[] userInfo = userString.split(":");
         return new UserInfo(userInfo[0],userInfo[1]);
+    }
+
+    public boolean isNewMessage() {
+        return newMessage;
+    }
+
+    public void setNewMessage(boolean newMessage) {
+        this.newMessage = newMessage;
     }
 
     @NonNull

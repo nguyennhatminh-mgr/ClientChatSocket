@@ -5,20 +5,27 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import huy.nguyen.androidclient.Model.UserInfo;
+import huy.nguyen.androidclient.Utilities.Interface.LoginCallback;
+import huy.nguyen.androidclient.Utilities.Interface.OnlineUserCallback;
+import huy.nguyen.androidclient.Utilities.Interface.SignupCallback;
 
 public class SocketUtil {
     private static Socket socket;
-
+    private static ServerSocket serverSocket;
+    private static String myIp;
+    public static Map<String, Socket> socketMap = new HashMap<>();
     private static final String NOTIFY_ONLINE = "NOTIFY_ONLINE";
     private static final String END_NOTIFY_ONLINE = "END_NOTIFY_ONLINE";
     private static final String REQUEST_ONLINE = "REQUEST_ONLINE";
+    private static final int SERVER_PORT = 8080;
 
 
     public static void setSocket(Socket valuesocket) {
@@ -27,6 +34,21 @@ public class SocketUtil {
 
     public static Socket getSocket() {
         return socket;
+    }
+
+    public static ServerSocket getServerSocket() throws IOException {
+        if (serverSocket == null){
+            serverSocket = new ServerSocket(SERVER_PORT);
+        }
+        return serverSocket;
+    }
+
+    public static String getMyIp() {
+        return myIp;
+    }
+
+    public static void setMyIp(String myIp) {
+        SocketUtil.myIp = myIp;
     }
 
     public static void doSignUp(final String username, final String password, final String accountname, final SignupCallback callback) {

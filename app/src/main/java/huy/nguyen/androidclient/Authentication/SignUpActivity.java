@@ -6,20 +6,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.net.Socket;
-
-import huy.nguyen.androidclient.Home.HomeActivity;
 import huy.nguyen.androidclient.R;
-import huy.nguyen.androidclient.Utilities.LoginCallback;
-import huy.nguyen.androidclient.Utilities.SignupCallback;
+import huy.nguyen.androidclient.Utilities.Interface.SignupCallback;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
 
 public class SignUpActivity extends AppCompatActivity {

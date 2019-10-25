@@ -41,14 +41,17 @@ public class HomeUserAdpter extends RecyclerView.Adapter<HomeUserAdpter.MessageV
 
     @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
-        UserInfo user=usersList.get(position);
+        final UserInfo user=usersList.get(position);
         holder.txtAccountname.setText(user.getAccountname());
+        if (user.isNewMessage()) holder.imgStatusMessage.setVisibility(View.VISIBLE);
+        else holder.imgStatusMessage.setVisibility(View.INVISIBLE);
 //        holder.imgItemMessage.setImageResource(message.getUser().getUrl());
         holder.setItemClickListener(new ItemClickListener() {
             @Override
             public void onClick(View view, int position) {
                 Toast.makeText(context,"Click"+position,Toast.LENGTH_SHORT).show();
                 Intent intent=new Intent(view.getContext(), MainActivity.class);
+                intent.putExtra("PeerIp",user.getIp());
                 view.getContext().startActivity(intent);
             }
         });
@@ -63,11 +66,13 @@ public class HomeUserAdpter extends RecyclerView.Adapter<HomeUserAdpter.MessageV
 
         TextView txtAccountname;
         ImageView imgOfUser;
+        ImageView imgStatusMessage;
         ItemClickListener itemClickListener;
         public MessageViewHolder(@NonNull View itemView, int viewType) {
             super(itemView);
             txtAccountname=itemView.findViewById(R.id.txtAccountnameInHomeItem);
             imgOfUser=itemView.findViewById(R.id.imgUserInHomeItem);
+            imgStatusMessage = itemView.findViewById(R.id.imgStatusMessage);
             itemView.setOnClickListener(this);
         }
         public void setItemClickListener(ItemClickListener itemClickListener){

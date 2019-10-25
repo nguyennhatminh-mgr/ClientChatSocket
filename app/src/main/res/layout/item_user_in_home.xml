@@ -23,4 +23,11 @@
         android:textSize="22dp"
         android:id="@+id/txtAccountnameInHomeItem"
         android:textColor="@color/textColor"/>
+    <ImageView
+        android:visibility="invisible"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@drawable/ic_new_message"
+        android:layout_marginLeft="30dp"
+        android:id="@+id/imgStatusMessage"/>
 </LinearLayout>

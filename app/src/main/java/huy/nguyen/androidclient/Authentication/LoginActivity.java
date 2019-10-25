@@ -13,7 +13,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -21,11 +20,10 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.regex.Pattern;
 
 import huy.nguyen.androidclient.Home.HomeActivity;
 import huy.nguyen.androidclient.R;
-import huy.nguyen.androidclient.Utilities.LoginCallback;
+import huy.nguyen.androidclient.Utilities.Interface.LoginCallback;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
 
 public class LoginActivity extends AppCompatActivity {
@@ -147,6 +145,12 @@ public class LoginActivity extends AppCompatActivity {
         if (intent.hasExtra("username")) {
             edtUsername.setText(intent.getStringExtra("username"));
             edtPassword.setText(intent.getStringExtra("password"));
+        }
+
+        try {
+            SocketUtil.setMyIp(getLocalIpAddress());
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
         }
     }
 
