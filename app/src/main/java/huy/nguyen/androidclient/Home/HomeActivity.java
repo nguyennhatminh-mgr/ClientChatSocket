@@ -27,6 +27,7 @@ import huy.nguyen.androidclient.R;
 import huy.nguyen.androidclient.ServerActivity;
 import huy.nguyen.androidclient.Utilities.Interface.OnlineUserCallback;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
+import huy.nguyen.androidclient.Utilities.ThreadManager;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -87,7 +88,9 @@ public class HomeActivity extends AppCompatActivity {
                     String[] arrIp = socket.getRemoteSocketAddress().toString().split(":");
                     String ip = arrIp[0].substring(1);
                     SocketUtil.socketMap.put(ip,socket);
-                    new ServerThread(socket).start();
+                    ServerThread serverThread = new ServerThread(socket);
+                    ThreadManager.threadList.put(ip,serverThread);
+                    serverThread.start();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -106,7 +109,6 @@ public class HomeActivity extends AppCompatActivity {
 
         public void run() {
             BufferedReader input;
-            PrintWriter output;
             String[] arrIp = socket.getRemoteSocketAddress().toString().split(":");
             final String ip = arrIp[0].substring(1);
             try {
