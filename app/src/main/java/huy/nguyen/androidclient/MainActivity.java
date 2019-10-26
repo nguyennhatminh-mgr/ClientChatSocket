@@ -23,9 +23,11 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Map;
 
+import huy.nguyen.androidclient.Home.HomeActivity;
 import huy.nguyen.androidclient.Message.MessageListViewAdapter;
 import huy.nguyen.androidclient.Model.Message;
 import huy.nguyen.androidclient.Model.User;
+import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.Utilities.EchoThread;
 import huy.nguyen.androidclient.Utilities.Interface.ActiveCallback;
 import huy.nguyen.androidclient.Utilities.SocketReader;
@@ -34,19 +36,16 @@ import huy.nguyen.androidclient.Utilities.SocketWriter;
 
 @SuppressLint("SetTextI18n")
 public class MainActivity extends AppCompatActivity {
-    Thread Thread1 = null;
-    EditText etIP, etPort;
     TextView tvMessages;
     EditText etMessage;
     ImageView btnSend;
-    Button btnSwap;
-    String SERVER_IP;
-    int SERVER_PORT;
     Socket socket;
     PrintWriter output;
     LinearLayout top,bottom;
+    String ip;
     private BufferedReader input;
 
+    private boolean backPressed = false;
 
     private static final String REQUEST_CHAT = "REQUEST_CHAT";
     private static final String RESPONSE_CHAT = "RESPONSE_CHAT";
@@ -56,7 +55,6 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<Message> messagesListView;
     ListView listView;
     public static MessageListViewAdapter messageListViewAdapter;
-    public ActiveCallback callback;
 
 
     @Override
@@ -90,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initSocket() {
         Intent intent = getIntent();
-        final String ip = intent.getStringExtra("PeerIp");
+         ip = intent.getStringExtra("PeerIp");
         final Map<String, Socket> socketMap = SocketUtil.socketMap;
         if (!socketMap.containsKey(ip)) {
             Toast.makeText(this, ip, Toast.LENGTH_SHORT).show();
@@ -99,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     try {
                         socket = new Socket(ip, 8080);
+                        Log.e("hello", "6" );
                         SocketUtil.socketMap.put(ip, socket);
                         output = new PrintWriter(socket.getOutputStream());
                         input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -116,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
             output = SocketWriter.writer.get(ip);
             input = SocketReader.reader.get(ip);
             new Thread(new ReceiverThread()).start();
+            Log.e("hello", "7" );
         }
     }
 
@@ -130,88 +130,40 @@ public class MainActivity extends AppCompatActivity {
             String msg;
             while (true) {
                 try {
-//                    input = SocketReader.reader.get(ip)
+//                    input = SocketReader.reader.get(ip);
+                    Log.e("hello", "8" );
                     final String message = input.readLine();
                     if (message != null) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                User user = new User("server");
-                                Message messageReal = new Message(message, user, false);
-                                messagesListView.add(messageReal);
-                                messageListViewAdapter.notifyDataSetChanged();
-                            }
-                        });
                         if (message.equals(END_CHAT)){
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    top.setVisibility(View.VISIBLE);
+                                    bottom.setVisibility(View.INVISIBLE);
+                                    listView.setVisibility(View.INVISIBLE);
+                                }
+                            });
+                            new Thread(new ReqResThread()).start();
                             break;
                         }
-                    }
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-
-        }
-    }
-
-
-    class Thread1 implements Runnable {
-        public void run() {
-            Socket socket;
-            try {
-                socket = new Socket(SERVER_IP, SERVER_PORT);
-                output = new PrintWriter(socket.getOutputStream());
-                input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        tvMessages.setText("Connected\n");
-                    }
-                });
-                new Thread(new Thread2()).start();
-            } catch (IOException e) {
-                e.printStackTrace();
-                Log.e("123","error 3 "+e);
-            }
-        }
-    }
-
-    class Thread2 implements Runnable {
-        @Override
-        public void run() {
-//            Log.e("msg","go here ?");
-            while (true) {
-//                Log.e("msg","adef");
-                try {
-                    final String message = input.readLine();
-//                    Log.e("msg",message);
-                    if (message != null) {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-//                                tvMessages.append("server: " + message + "\n");
                                 User user = new User("server");
                                 Message messageReal = new Message(message, user, false);
-//                                messageArrayList.add(messageReal);
-//                                messageAdpter.notifyDataSetChanged();
                                 messagesListView.add(messageReal);
                                 messageListViewAdapter.notifyDataSetChanged();
                             }
                         });
-                    } else {
-//                        Log.e("msg","get a");
-                        Thread1 = new Thread(new Thread1());
-                        Thread1.start();
-                        return;
+
                     }
+
                 } catch (IOException e) {
-//                    Log.e("msg","get there");
-                    Log.e("123","error 4 "+e);
                     e.printStackTrace();
                 }
             }
+
+
         }
     }
 
@@ -227,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             output.write(message + "\n");
             output.flush();
+            Log.e("hello", "9" );
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -247,14 +200,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             output.write(REQUEST_CHAT + "\n");
-            Log.e("123", "ran " );
+            Log.e("hello", "10" );
             output.flush();
             while (true) {
                 try {
                     String res = input.readLine();
-                    Log.e("123", res);
                     if (res.equals(RESPONSE_CHAT)) {
-                        Log.e("123", "gg3");
+                        Log.e("hello", "11" );
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -267,12 +219,26 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     }
                 } catch (IOException e) {
-                    Log.e("123","error 5 "+e);
+//                    Log.e("123","error 5 "+e);
                     e.printStackTrace();
                 }
             }
         }
     }
 
-
+    @Override
+    public void onBackPressed() {
+        backPressed = true;
+        ArrayList<UserInfo> userArr = HomeActivity.userArrayList;
+        for (int i=0;i<userArr.size();i++){
+            UserInfo info = userArr.get(i);
+            if (info.getIp().equals(ip)){
+                info.setNewMessage(true);
+                HomeActivity.userArrayList.set(i,info);
+                break;
+            }
+        }
+        output.write(END_CHAT + "\n");
+        super.onBackPressed();
+    }
 }

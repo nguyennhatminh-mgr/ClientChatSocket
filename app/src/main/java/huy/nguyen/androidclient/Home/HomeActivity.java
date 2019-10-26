@@ -30,7 +30,7 @@ import huy.nguyen.androidclient.Utilities.ThreadManager;
 
 public class HomeActivity extends AppCompatActivity {
 
-    ArrayList<UserInfo> userArrayList;
+    public static ArrayList<UserInfo> userArrayList;
     HomeUserAdpter homeUserAdpter;
     ListView listView;
     Socket conn;
@@ -54,7 +54,6 @@ public class HomeActivity extends AppCompatActivity {
         userArrayList = new ArrayList<>();
         homeUserAdpter = new HomeUserAdpter(HomeActivity.this, userArrayList);
         listView.setAdapter(homeUserAdpter);
-//        fakeData();
         SocketUtil.retriveOnlineUser(new OnlineUserCallback() {
             @Override
             public void retriveOnlineList(final ArrayList<UserInfo> onlineList) {
@@ -76,6 +75,7 @@ public class HomeActivity extends AppCompatActivity {
                 final UserInfo info = (UserInfo) homeUserAdpter.getItem(position);
                 Intent intent = new Intent(HomeActivity.this, MainActivity.class);
                 if (info.isNewMessage()) {
+                    Log.e("hello", "4" );
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -86,6 +86,7 @@ public class HomeActivity extends AppCompatActivity {
                     }).start();
                 } else{
                     intent.putExtra("Create",true);
+                    Log.e("hello", "5" );
                 }
                 intent.putExtra("PeerIp",info.getIp());
                 startActivity(intent);
@@ -107,6 +108,7 @@ public class HomeActivity extends AppCompatActivity {
                 serverSocket = new ServerSocket(8080);
                 try {
                     socket = serverSocket.accept();
+                    Log.e("hello", "1" );
                     String[] arrIp = socket.getRemoteSocketAddress().toString().split(":");
                     String ip = arrIp[0].substring(1);
                     SocketUtil.socketMap.put(ip,socket);
@@ -138,21 +140,21 @@ public class HomeActivity extends AppCompatActivity {
 
         public void run() {
             BufferedReader input;
-            PrintWriter writer;
             String[] arrIp = socket.getRemoteSocketAddress().toString().split(":");
             final String ip = arrIp[0].substring(1);
             try {
                 input = SocketReader.reader.get(ip);
-                writer = SocketWriter.writer.get(ip);
-//                writer = new PrintWriter(socket.getOutputStream());
+                Log.e("hello", "2" );
                 String msg;
                 while (true){
                     msg=input.readLine();
                     if (msg.equals(REQUEST_CHAT)) {
+                        Log.e("hello", "3" );
                         for (int i=0;i<userArrayList.size();i++){
                             UserInfo info = userArrayList.get(i);
                             if (info.getIp().equals(ip)){
                                 info.setNewMessage(true);
+                                userArrayList.set(i,info);
                                 break;
                             }
                         }

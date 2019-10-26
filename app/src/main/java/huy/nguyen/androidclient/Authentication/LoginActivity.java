@@ -168,7 +168,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Socket socket = new Socket("192.168.137.1", 8080);
+                    Socket socket = new Socket("192.168.43.226", 8080);
                     SocketUtil.setSocket(socket);
                 } catch (IOException e) {
                     e.printStackTrace();
