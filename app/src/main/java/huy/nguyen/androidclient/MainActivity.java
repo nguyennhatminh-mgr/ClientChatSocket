@@ -2,7 +2,10 @@ package huy.nguyen.androidclient;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -38,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     EditText etIP, etPort;
     TextView tvMessages;
     EditText etMessage;
-    ImageView btnSend;
+    ImageView btnSend,btnUploadFile;
     Button btnSwap;
     String SERVER_IP;
     int SERVER_PORT;
@@ -46,7 +49,8 @@ public class MainActivity extends AppCompatActivity {
     PrintWriter output;
     LinearLayout top,bottom;
     private BufferedReader input;
-
+    private final int PICK_IMAGE_REQUEST = 71;
+    private Uri filePath;
 
     private static final String REQUEST_CHAT = "REQUEST_CHAT";
     private static final String RESPONSE_CHAT = "RESPONSE_CHAT";
@@ -66,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
         tvMessages = findViewById(R.id.tvMessages);
         etMessage = findViewById(R.id.etMessage);
         btnSend = findViewById(R.id.btnSend);
+        btnUploadFile=findViewById(R.id.btnFileUpLoad);
         top = findViewById(R.id.alert);
         bottom = findViewById(R.id.lyBot);
         addControls();
@@ -86,6 +91,38 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        btnUploadFile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                chooseImage();
+            }
+        });
+    }
+
+    private void chooseImage() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
+                && data != null && data.getData() != null )
+        {
+            filePath = data.getData();
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
+                etMessage.setText(filePath.toString());
+                Toast.makeText(MainActivity.this,"Choose file success",Toast.LENGTH_SHORT).show();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void initSocket() {
