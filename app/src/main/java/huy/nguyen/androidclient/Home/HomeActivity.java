@@ -28,9 +28,11 @@ import huy.nguyen.androidclient.Utilities.SocketUtil;
 import huy.nguyen.androidclient.Utilities.SocketWriter;
 import huy.nguyen.androidclient.Utilities.ThreadManager;
 
+import static huy.nguyen.androidclient.Utilities.SocketUtil.socketMap;
+
 public class HomeActivity extends AppCompatActivity {
 
-    ArrayList<UserInfo> userArrayList;
+    public static ArrayList<UserInfo> userArrayList;
     HomeUserAdpter homeUserAdpter;
     ListView listView;
     Socket conn;
@@ -49,12 +51,10 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        initMyServerSocket();
         listView = findViewById(R.id.lvListUserInHome);
         userArrayList = new ArrayList<>();
         homeUserAdpter = new HomeUserAdpter(HomeActivity.this, userArrayList);
         listView.setAdapter(homeUserAdpter);
-//        fakeData();
         SocketUtil.retriveOnlineUser(new OnlineUserCallback() {
             @Override
             public void retriveOnlineList(final ArrayList<UserInfo> onlineList) {
@@ -75,7 +75,9 @@ public class HomeActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 final UserInfo info = (UserInfo) homeUserAdpter.getItem(position);
                 Intent intent = new Intent(HomeActivity.this, MainActivity.class);
+                Toast.makeText(HomeActivity.this, info.isNewMessage()?"1":"0", Toast.LENGTH_SHORT).show();
                 if (info.isNewMessage()) {
+                    Log.e("hello", "4" );
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -85,13 +87,15 @@ public class HomeActivity extends AppCompatActivity {
                         }
                     }).start();
                 } else{
-                    intent.putExtra("Create",true);
+                    if (socketMap.containsKey(info.getIp())) intent.putExtra("resocket",true);
+                    Log.e("hello", "5" );
                 }
                 intent.putExtra("PeerIp",info.getIp());
                 startActivity(intent);
 
             }
         });
+        initMyServerSocket();
     }
 
     private void initMyServerSocket() {
@@ -102,14 +106,15 @@ public class HomeActivity extends AppCompatActivity {
     class Thread1 implements Runnable {
         @Override
         public void run() {
-            Socket socket;
             try {
                 serverSocket = new ServerSocket(8080);
-                try {
+                while (true) {
+                    Socket socket;
                     socket = serverSocket.accept();
+                    Log.e("hello", "1" );
                     String[] arrIp = socket.getRemoteSocketAddress().toString().split(":");
                     String ip = arrIp[0].substring(1);
-                    SocketUtil.socketMap.put(ip,socket);
+                    socketMap.put(ip,socket);
                     BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     SocketReader.reader.put(ip,input);
                     PrintWriter writer = new PrintWriter(socket.getOutputStream());
@@ -117,12 +122,9 @@ public class HomeActivity extends AppCompatActivity {
                     ServerThread serverThread = new ServerThread(socket);
                     ThreadManager.threadList.put(ip,serverThread);
                     serverThread.start();
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
             } catch (IOException e) {
                 Log.e("123","error 1 "+e);
-
                 e.printStackTrace();
             }
         }
@@ -138,21 +140,21 @@ public class HomeActivity extends AppCompatActivity {
 
         public void run() {
             BufferedReader input;
-            PrintWriter writer;
             String[] arrIp = socket.getRemoteSocketAddress().toString().split(":");
             final String ip = arrIp[0].substring(1);
             try {
                 input = SocketReader.reader.get(ip);
-                writer = SocketWriter.writer.get(ip);
-//                writer = new PrintWriter(socket.getOutputStream());
+                Log.e("hello", "2" );
                 String msg;
                 while (true){
                     msg=input.readLine();
                     if (msg.equals(REQUEST_CHAT)) {
+                        Log.e("hello", "3" );
                         for (int i=0;i<userArrayList.size();i++){
                             UserInfo info = userArrayList.get(i);
                             if (info.getIp().equals(ip)){
                                 info.setNewMessage(true);
+                                userArrayList.set(i,info);
                                 break;
                             }
                         }

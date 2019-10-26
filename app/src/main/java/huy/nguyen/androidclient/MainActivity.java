@@ -26,9 +26,11 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Map;
 
+import huy.nguyen.androidclient.Home.HomeActivity;
 import huy.nguyen.androidclient.Message.MessageListViewAdapter;
 import huy.nguyen.androidclient.Model.Message;
 import huy.nguyen.androidclient.Model.User;
+import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.Utilities.EchoThread;
 import huy.nguyen.androidclient.Utilities.Interface.ActiveCallback;
 import huy.nguyen.androidclient.Utilities.SocketReader;
@@ -37,8 +39,6 @@ import huy.nguyen.androidclient.Utilities.SocketWriter;
 
 @SuppressLint("SetTextI18n")
 public class MainActivity extends AppCompatActivity {
-    Thread Thread1 = null;
-    EditText etIP, etPort;
     TextView tvMessages;
     EditText etMessage;
     ImageView btnSend,btnUploadFile;
@@ -51,16 +51,22 @@ public class MainActivity extends AppCompatActivity {
     private BufferedReader input;
     private final int PICK_IMAGE_REQUEST = 71;
     private Uri filePath;
+    ImageView btnSend;
+    LinearLayout top, bottom;
+    String ip;
+
+    private ArrayList<Thread> listThread = new ArrayList<>();
+
+    private boolean backPressed = false;
+    private volatile static boolean onlineFriend = false;
 
     private static final String REQUEST_CHAT = "REQUEST_CHAT";
     private static final String RESPONSE_CHAT = "RESPONSE_CHAT";
 
     private static final String END_CHAT = "END_CHAT";
-
     ArrayList<Message> messagesListView;
     ListView listView;
     public static MessageListViewAdapter messageListViewAdapter;
-    public ActiveCallback callback;
 
 
     @Override
@@ -127,32 +133,42 @@ public class MainActivity extends AppCompatActivity {
 
     private void initSocket() {
         Intent intent = getIntent();
-        final String ip = intent.getStringExtra("PeerIp");
+        ip = intent.getStringExtra("PeerIp");
+        boolean resocket = false;
+        if (intent.hasExtra("resocket"))
+            resocket = true;
         final Map<String, Socket> socketMap = SocketUtil.socketMap;
         if (!socketMap.containsKey(ip)) {
-            Toast.makeText(this, ip, Toast.LENGTH_SHORT).show();
-            new Thread(new Runnable() {
+            Thread a = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
+                        Socket socket;
                         socket = new Socket(ip, 8080);
+                        Log.e("hello", "6");
                         SocketUtil.socketMap.put(ip, socket);
-                        output = new PrintWriter(socket.getOutputStream());
-                        input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        PrintWriter output = new PrintWriter(socket.getOutputStream());
+                        BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        SocketReader.reader.put(ip,input);
+                        SocketWriter.writer.put(ip,output);
 //                        EchoThread thread = new EchoThread(socket)
-                        new Thread(new ReqResThread()).start();
+                        new ReqResThread().run();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
-            }).start();
+            });
+            listThread.add(a);
+            a.start();
         } else {
-            top.setVisibility(View.GONE);
-            bottom.setVisibility(View.VISIBLE);
-            listView.setVisibility(View.VISIBLE);
-            output = SocketWriter.writer.get(ip);
-            input = SocketReader.reader.get(ip);
-            new Thread(new ReceiverThread()).start();
+                if (!resocket){
+                    top.setVisibility(View.GONE);
+                    bottom.setVisibility(View.VISIBLE);
+                    listView.setVisibility(View.VISIBLE);
+                }
+                Thread b = new Thread(new ReceiverThread());
+                listThread.add(b);
+                b.start();
         }
     }
 
@@ -164,91 +180,42 @@ public class MainActivity extends AppCompatActivity {
     class ReceiverThread implements Runnable {
         @Override
         public void run() {
-            String msg;
-            while (true) {
+            BufferedReader input = SocketReader.reader.get(ip);
+            while (!Thread.interrupted()) {
                 try {
-//                    input = SocketReader.reader.get(ip)
                     final String message = input.readLine();
                     if (message != null) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                User user = new User("server");
-                                Message messageReal = new Message(message, user, false);
-                                messagesListView.add(messageReal);
-                                messageListViewAdapter.notifyDataSetChanged();
-                            }
-                        });
-                        if (message.equals(END_CHAT)){
+                        if (message.equals(END_CHAT)) {
+//                            onlineFriend = false;
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    top.setVisibility(View.VISIBLE);
+                                    bottom.setVisibility(View.INVISIBLE);
+                                    listView.setVisibility(View.INVISIBLE);
+                                }
+                            });
+                            new ReqResThread().run();
                             break;
                         }
-                    }
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-
-        }
-    }
-
-
-    class Thread1 implements Runnable {
-        public void run() {
-            Socket socket;
-            try {
-                socket = new Socket(SERVER_IP, SERVER_PORT);
-                output = new PrintWriter(socket.getOutputStream());
-                input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        tvMessages.setText("Connected\n");
-                    }
-                });
-                new Thread(new Thread2()).start();
-            } catch (IOException e) {
-                e.printStackTrace();
-                Log.e("123","error 3 "+e);
-            }
-        }
-    }
-
-    class Thread2 implements Runnable {
-        @Override
-        public void run() {
-//            Log.e("msg","go here ?");
-            while (true) {
-//                Log.e("msg","adef");
-                try {
-                    final String message = input.readLine();
-//                    Log.e("msg",message);
-                    if (message != null) {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-//                                tvMessages.append("server: " + message + "\n");
                                 User user = new User("server");
                                 Message messageReal = new Message(message, user, false);
-//                                messageArrayList.add(messageReal);
-//                                messageAdpter.notifyDataSetChanged();
                                 messagesListView.add(messageReal);
                                 messageListViewAdapter.notifyDataSetChanged();
                             }
                         });
-                    } else {
-//                        Log.e("msg","get a");
-                        Thread1 = new Thread(new Thread1());
-                        Thread1.start();
-                        return;
+
                     }
+
                 } catch (IOException e) {
-//                    Log.e("msg","get there");
-                    Log.e("123","error 4 "+e);
                     e.printStackTrace();
                 }
             }
+
+
         }
     }
 
@@ -262,8 +229,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
+            PrintWriter output = SocketWriter.writer.get(ip);
             output.write(message + "\n");
             output.flush();
+            Log.e("hello", "9");
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -283,15 +252,19 @@ public class MainActivity extends AppCompatActivity {
     class ReqResThread implements Runnable {
         @Override
         public void run() {
+            PrintWriter output = SocketWriter.writer.get(ip);
+            BufferedReader input = SocketReader.reader.get(ip);
+            Log.e("hello", "10" );
             output.write(REQUEST_CHAT + "\n");
-            Log.e("123", "ran " );
             output.flush();
             while (true) {
                 try {
                     String res = input.readLine();
-                    Log.e("123", res);
+                    Log.e("test", res);
                     if (res.equals(RESPONSE_CHAT)) {
-                        Log.e("123", "gg3");
+                        Log.e("test", "kaka");
+                        onlineFriend = true;
+                        Log.e("test", "keke");
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -304,12 +277,48 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     }
                 } catch (IOException e) {
-                    Log.e("123","error 5 "+e);
+//                    Log.e("123","error 5 "+e);
                     e.printStackTrace();
                 }
             }
         }
     }
 
-
+    @Override
+    public void onBackPressed() {
+//        backPressed = true;
+        ArrayList<UserInfo> userArr = HomeActivity.userArrayList;
+        Toast.makeText(this, onlineFriend?"1":"0", Toast.LENGTH_SHORT).show();
+        if (onlineFriend) {
+            for (int i = 0; i < userArr.size(); i++) {
+                UserInfo info = userArr.get(i);
+                if (info.getIp().equals(ip)) {
+                    info.setNewMessage(true);
+                    HomeActivity.userArrayList.set(i, info);
+                    break;
+                }
+            }
+        } else {
+            for (int i = 0; i < userArr.size(); i++) {
+                UserInfo info = userArr.get(i);
+                if (info.getIp().equals(ip)) {
+                    info.setNewMessage(false);
+                    HomeActivity.userArrayList.set(i, info);
+                    break;
+                }
+            }
+        }
+        for(Thread thread:listThread){
+            thread.interrupt();
+        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                PrintWriter output = SocketWriter.writer.get(ip);
+                output.write(END_CHAT + "\n");
+                output.flush();
+            }
+        }).start();
+        super.onBackPressed();
+    }
 }

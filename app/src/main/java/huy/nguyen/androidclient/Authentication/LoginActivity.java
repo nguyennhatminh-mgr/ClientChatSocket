@@ -33,6 +33,8 @@ public class LoginActivity extends AppCompatActivity {
     TextView txtSignUp;
     int checkUsername = 0;
     int checkPassword = 0;
+    String MINH_IP = "192.168.137.1";
+    String HUY_IP = "192.168.43.226";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -168,7 +170,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Socket socket = new Socket("192.168.137.1", 8080);
+                    Socket socket = new Socket(HUY_IP, 8080);
                     SocketUtil.setSocket(socket);
                 } catch (IOException e) {
                     e.printStackTrace();
