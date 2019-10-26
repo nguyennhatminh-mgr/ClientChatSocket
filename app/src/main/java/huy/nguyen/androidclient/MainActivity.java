@@ -39,19 +39,18 @@ public class MainActivity extends AppCompatActivity {
     TextView tvMessages;
     EditText etMessage;
     ImageView btnSend;
-    Socket socket;
-    PrintWriter output;
-    LinearLayout top,bottom;
+    LinearLayout top, bottom;
     String ip;
-    private BufferedReader input;
+
+    private ArrayList<Thread> listThread = new ArrayList<>();
 
     private boolean backPressed = false;
+    private volatile static boolean onlineFriend = false;
 
     private static final String REQUEST_CHAT = "REQUEST_CHAT";
     private static final String RESPONSE_CHAT = "RESPONSE_CHAT";
 
     private static final String END_CHAT = "END_CHAT";
-
     ArrayList<Message> messagesListView;
     ListView listView;
     public static MessageListViewAdapter messageListViewAdapter;
@@ -88,34 +87,42 @@ public class MainActivity extends AppCompatActivity {
 
     private void initSocket() {
         Intent intent = getIntent();
-         ip = intent.getStringExtra("PeerIp");
+        ip = intent.getStringExtra("PeerIp");
+        boolean resocket = false;
+        if (intent.hasExtra("resocket"))
+            resocket = true;
         final Map<String, Socket> socketMap = SocketUtil.socketMap;
         if (!socketMap.containsKey(ip)) {
-            Toast.makeText(this, ip, Toast.LENGTH_SHORT).show();
-            new Thread(new Runnable() {
+            Thread a = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
+                        Socket socket;
                         socket = new Socket(ip, 8080);
-                        Log.e("hello", "6" );
+                        Log.e("hello", "6");
                         SocketUtil.socketMap.put(ip, socket);
-                        output = new PrintWriter(socket.getOutputStream());
-                        input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        PrintWriter output = new PrintWriter(socket.getOutputStream());
+                        BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        SocketReader.reader.put(ip,input);
+                        SocketWriter.writer.put(ip,output);
 //                        EchoThread thread = new EchoThread(socket)
-                        new Thread(new ReqResThread()).start();
+                        new ReqResThread().run();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
-            }).start();
+            });
+            listThread.add(a);
+            a.start();
         } else {
-            top.setVisibility(View.GONE);
-            bottom.setVisibility(View.VISIBLE);
-            listView.setVisibility(View.VISIBLE);
-            output = SocketWriter.writer.get(ip);
-            input = SocketReader.reader.get(ip);
-            new Thread(new ReceiverThread()).start();
-            Log.e("hello", "7" );
+                if (!resocket){
+                    top.setVisibility(View.GONE);
+                    bottom.setVisibility(View.VISIBLE);
+                    listView.setVisibility(View.VISIBLE);
+                }
+                Thread b = new Thread(new ReceiverThread());
+                listThread.add(b);
+                b.start();
         }
     }
 
@@ -127,14 +134,13 @@ public class MainActivity extends AppCompatActivity {
     class ReceiverThread implements Runnable {
         @Override
         public void run() {
-            String msg;
-            while (true) {
+            BufferedReader input = SocketReader.reader.get(ip);
+            while (!Thread.interrupted()) {
                 try {
-//                    input = SocketReader.reader.get(ip);
-                    Log.e("hello", "8" );
                     final String message = input.readLine();
                     if (message != null) {
-                        if (message.equals(END_CHAT)){
+                        if (message.equals(END_CHAT)) {
+//                            onlineFriend = false;
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -143,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
                                     listView.setVisibility(View.INVISIBLE);
                                 }
                             });
-                            new Thread(new ReqResThread()).start();
+                            new ReqResThread().run();
                             break;
                         }
                         runOnUiThread(new Runnable() {
@@ -177,9 +183,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
+            PrintWriter output = SocketWriter.writer.get(ip);
             output.write(message + "\n");
             output.flush();
-            Log.e("hello", "9" );
+            Log.e("hello", "9");
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -199,14 +206,19 @@ public class MainActivity extends AppCompatActivity {
     class ReqResThread implements Runnable {
         @Override
         public void run() {
-            output.write(REQUEST_CHAT + "\n");
+            PrintWriter output = SocketWriter.writer.get(ip);
+            BufferedReader input = SocketReader.reader.get(ip);
             Log.e("hello", "10" );
+            output.write(REQUEST_CHAT + "\n");
             output.flush();
             while (true) {
                 try {
                     String res = input.readLine();
+                    Log.e("test", res);
                     if (res.equals(RESPONSE_CHAT)) {
-                        Log.e("hello", "11" );
+                        Log.e("test", "kaka");
+                        onlineFriend = true;
+                        Log.e("test", "keke");
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -228,17 +240,39 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        backPressed = true;
+//        backPressed = true;
         ArrayList<UserInfo> userArr = HomeActivity.userArrayList;
-        for (int i=0;i<userArr.size();i++){
-            UserInfo info = userArr.get(i);
-            if (info.getIp().equals(ip)){
-                info.setNewMessage(true);
-                HomeActivity.userArrayList.set(i,info);
-                break;
+        Toast.makeText(this, onlineFriend?"1":"0", Toast.LENGTH_SHORT).show();
+        if (onlineFriend) {
+            for (int i = 0; i < userArr.size(); i++) {
+                UserInfo info = userArr.get(i);
+                if (info.getIp().equals(ip)) {
+                    info.setNewMessage(true);
+                    HomeActivity.userArrayList.set(i, info);
+                    break;
+                }
+            }
+        } else {
+            for (int i = 0; i < userArr.size(); i++) {
+                UserInfo info = userArr.get(i);
+                if (info.getIp().equals(ip)) {
+                    info.setNewMessage(false);
+                    HomeActivity.userArrayList.set(i, info);
+                    break;
+                }
             }
         }
-        output.write(END_CHAT + "\n");
+        for(Thread thread:listThread){
+            thread.interrupt();
+        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                PrintWriter output = SocketWriter.writer.get(ip);
+                output.write(END_CHAT + "\n");
+                output.flush();
+            }
+        }).start();
         super.onBackPressed();
     }
 }
