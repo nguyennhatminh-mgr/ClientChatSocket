@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -35,6 +37,8 @@ public class HomeActivity extends AppCompatActivity {
     public static ArrayList<UserInfo> userArrayList;
     HomeUserAdpter homeUserAdpter;
     ListView listView;
+    CheckBox checkBox;
+    Button btnCreateGroup;
     Socket conn;
     ServerSocket serverSocket;
     Thread Thread1 = null;
@@ -52,9 +56,20 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         listView = findViewById(R.id.lvListUserInHome);
+        checkBox=findViewById(R.id.chkAddToGroup);
+        btnCreateGroup=findViewById(R.id.btnCreateGroup);
         userArrayList = new ArrayList<>();
         homeUserAdpter = new HomeUserAdpter(HomeActivity.this, userArrayList);
         listView.setAdapter(homeUserAdpter);
+
+        btnCreateGroup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(HomeActivity.this,GroupChatActivity.class);
+                startActivity(intent);
+            }
+        });
+
         SocketUtil.retriveOnlineUser(new OnlineUserCallback() {
             @Override
             public void retriveOnlineList(final ArrayList<UserInfo> onlineList) {

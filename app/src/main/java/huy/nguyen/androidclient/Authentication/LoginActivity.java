@@ -129,7 +129,7 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                if (edtPassword.getText().toString().matches("([0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z])*")) {
+                if (edtPassword.getText().toString().matches("[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z]([0-9a-zA-Z])*")) {
                     checkPassword = 1;
                 } else {
                     edtPassword.setError("Password is at least 6 characters");
@@ -170,7 +170,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Socket socket = new Socket(HUY_IP, 8080);
+                    Socket socket = new Socket("192.168.200.22", 8080);
                     SocketUtil.setSocket(socket);
                 } catch (IOException e) {
                     e.printStackTrace();

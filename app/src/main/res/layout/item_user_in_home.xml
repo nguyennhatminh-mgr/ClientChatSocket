@@ -30,4 +30,9 @@
         android:background="@drawable/ic_new_message"
         android:layout_marginLeft="30dp"
         android:id="@+id/imgStatusMessage"/>
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:id="@+id/chkAddToGroup"/>
 </LinearLayout>

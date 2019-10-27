@@ -9,25 +9,27 @@
     >
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:visibility="visible"
         android:orientation="vertical"
-        android:gravity="center_horizontal"
+        android:gravity="center_vertical|center_horizontal"
         android:id="@+id/alert">
         <ImageView
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:background="@drawable/ic_notifications"/>
+            android:background="@drawable/ic_notifications"
+            android:layout_marginBottom="5dp"/>
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Waiting for respond"/>
+            android:text="Waiting for respond..."
+            android:textSize="24dp"/>
     </LinearLayout>
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="invisible"
+        android:visibility="gone"
         android:id="@+id/lstMessage"
         android:divider="@android:color/transparent"
         android:dividerHeight="5dp"
@@ -43,7 +45,7 @@
         android:orientation="horizontal"
         android:layout_alignParentBottom="true"
         android:gravity="center"
-        android:visibility="invisible"
+        android:visibility="gone"
         android:layout_marginTop="10dp">
 
         <ImageView
