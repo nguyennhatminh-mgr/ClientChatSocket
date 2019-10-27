@@ -170,7 +170,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Socket socket = new Socket(TVTT_IP, 8080);
+                    Socket socket = new Socket(HUY_IP, 8080);
                     SocketUtil.setSocket(socket);
                 } catch (IOException e) {
                     e.printStackTrace();

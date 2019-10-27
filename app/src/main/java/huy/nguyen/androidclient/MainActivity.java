@@ -1,9 +1,12 @@
 package huy.nguyen.androidclient;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -18,6 +21,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -26,6 +31,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -89,6 +95,16 @@ public class MainActivity extends AppCompatActivity {
         addControls();
 
         initSocket();
+        try {
+            if (Build.VERSION.SDK_INT >= 23) {
+                int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                }
+            }
+        } catch (Exception e){
+            Log.e("1234", "error"+e);
+        }
 
         messagesListView = new ArrayList<>();
         messageListViewAdapter = new MessageListViewAdapter(MainActivity.this, messagesListView);
@@ -114,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void chooseImage() {
         Intent intent = new Intent();
-        intent.setType("file/*");
+        intent.setType("*/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
     }
@@ -125,7 +141,9 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
                 && data != null && data.getData() != null) {
             final Uri filePath = data.getData();
-
+            String value = data.getDataString();
+            Log.e("1234",value);
+            Log.e("1234", "file path:" + filePath.toString());
             String[] parsefileName = filePath.toString().split("[/]");
             final String fileName = parsefileName[parsefileName.length - 1];
 //                FileInputStream file=new FileInputStream(String.valueOf(filePath));
@@ -137,17 +155,21 @@ public class MainActivity extends AppCompatActivity {
                         PrintWriter output = SocketWriter.writer.get(ip);
                         output.write(SEND_FILE + "\n");
                         output.write(fileName + "\n");
+                        Log.e("1234", "file name "+fileName );
                         output.flush();
                         File sendFile = new File(filePath.getPath());
+
+                        FileInputStream stream = (FileInputStream) getContentResolver().openInputStream(filePath);
+
                         DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-                        FileInputStream fis = new FileInputStream(sendFile);
+//                        FileInputStream fis = new FileInputStream(sendFile);
                         byte[] myBuffer = new byte[4069];
                         int bytesRead = 0;
-                        while (fis.read(myBuffer) > 0) {
+                        while (stream.read(myBuffer) > 0) {
                             dos.write(myBuffer);
                         }
-                        fis.close();
-                        dos.close();
+                        stream.close();
+//                        dos.close();
                         etMessage.setText(fileName);
                         runOnUiThread(new Runnable() {
                             @Override
@@ -158,8 +180,7 @@ public class MainActivity extends AppCompatActivity {
                                 messageListViewAdapter.notifyDataSetChanged();
                             }
                         });
-                        Toast.makeText(MainActivity.this, "Choose file success", Toast.LENGTH_SHORT).show();
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         Log.e("1234", e.toString());
                     }
 
@@ -219,7 +240,8 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             BufferedReader input = SocketReader.reader.get(ip);
             Socket socket = SocketUtil.socketMap.get(ip);
-            while (!Thread.interrupted()) {
+            boolean stop = false;
+//            while (!stop) {
                 try {
                     final String message = input.readLine();
                     if (message != null) {
@@ -234,33 +256,34 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             });
                             new ReqResThread().run();
-                            break;
+//                            break;
                         }
                         if (message.equals(SEND_FILE)) {
-                            String root = Environment.getExternalStorageDirectory().toString();
+                            stop = true;
+//                            String root = Environment.getExternalStorageDirectory().toString();
                             final String fileName = input.readLine();
-                            PrintWriter output = SocketWriter.writer.get(ip);
+                            File file = new File(Environment.getExternalStorageDirectory(),fileName+".pdf");
                             DataInputStream dis = new DataInputStream(socket.getInputStream());
-                            FileOutputStream fos = new FileOutputStream(root + fileName);
+                            FileOutputStream fos = new FileOutputStream(file);
                             byte[] buffer = new byte[4069];
-                            int filesize = 15123;
-                            int read = 0;
-                            int remaining = filesize;
-                            while ((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
-                                remaining -= read;
+                            int read = dis.read(buffer);;
+                            while ((read ) > 0) {
                                 fos.write(buffer, 0, read);
-                            }
-                            fos.close();
-                            dis.close();
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    User user = new User("server");
-                                    Message messageReal = new Message(fileName, user, false);
-                                    messagesListView.add(messageReal);
-                                    messageListViewAdapter.notifyDataSetChanged();
+                                read = dis.read(buffer);
+                                if (read<0) {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            User user = new User("server");
+                                            Message messageReal = new Message(fileName, user, false);
+                                            messagesListView.add(messageReal);
+                                            messageListViewAdapter.notifyDataSetChanged();
+                                        }
+                                    });
+                                    fos.close();
+                                    new Thread(new ReceiverThread()).start();
                                 }
-                            });
+                            }
                         } else {
                             runOnUiThread(new Runnable() {
                                 @Override
@@ -271,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
                                     messageListViewAdapter.notifyDataSetChanged();
                                 }
                             });
+                            new ReceiverThread().run();
                         }
 
 
@@ -278,8 +302,9 @@ public class MainActivity extends AppCompatActivity {
 
                 } catch (IOException e) {
                     e.printStackTrace();
+                    Log.e("1234", "error file "+e);
                 }
-            }
+//            }
 
 
         }
