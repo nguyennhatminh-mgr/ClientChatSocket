@@ -38,14 +38,35 @@
             android:backgroundTint="@color/backgroundMessage"/>
     </LinearLayout>
 
-    <TextView
-        android:layout_marginLeft="5dp"
-        android:layout_marginTop="10dp"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="List users online"
-        android:textSize="22dp"
-        android:textColor="@color/textColor"/>
+        android:orientation="horizontal"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="10dp"
+        android:gravity="center">
+        <TextView
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="List users online"
+            android:textSize="22dp"
+            android:textColor="@color/textColor"
+            android:layout_weight="1"
+            />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Create Group"
+            android:background="@drawable/frame_message_border"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:textColor="@color/textLoginColor"
+            android:backgroundTint="@color/backgroundMessage"
+            android:id="@+id/btnCreateGroup"
+            />
+    </LinearLayout>
+
 
     <ListView
         android:layout_marginTop="10dp"
@@ -55,4 +76,5 @@
         android:padding="10dp"
         android:id="@+id/lvListUserInHome"
         />
+
 </LinearLayout>

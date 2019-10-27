@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
@@ -19,11 +20,18 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import huy.nguyen.androidclient.Home.HomeActivity;
@@ -41,18 +49,15 @@ import huy.nguyen.androidclient.Utilities.SocketWriter;
 public class MainActivity extends AppCompatActivity {
     TextView tvMessages;
     EditText etMessage;
-    ImageView btnSend,btnUploadFile;
+    ImageView btnSend, btnUploadFile;
     Button btnSwap;
     String SERVER_IP;
     int SERVER_PORT;
     Socket socket;
     PrintWriter output;
-    LinearLayout top,bottom;
+    LinearLayout top, bottom;
     private BufferedReader input;
     private final int PICK_IMAGE_REQUEST = 71;
-    private Uri filePath;
-    ImageView btnSend;
-    LinearLayout top, bottom;
     String ip;
 
     private ArrayList<Thread> listThread = new ArrayList<>();
@@ -64,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String RESPONSE_CHAT = "RESPONSE_CHAT";
 
     private static final String END_CHAT = "END_CHAT";
+    private static final String SEND_FILE = "SEND_FILE";
     ArrayList<Message> messagesListView;
     ListView listView;
     public static MessageListViewAdapter messageListViewAdapter;
@@ -76,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
         tvMessages = findViewById(R.id.tvMessages);
         etMessage = findViewById(R.id.etMessage);
         btnSend = findViewById(R.id.btnSend);
-        btnUploadFile=findViewById(R.id.btnFileUpLoad);
+        btnUploadFile = findViewById(R.id.btnFileUpLoad);
         top = findViewById(R.id.alert);
         bottom = findViewById(R.id.lyBot);
         addControls();
@@ -107,27 +113,57 @@ public class MainActivity extends AppCompatActivity {
 
     private void chooseImage() {
         Intent intent = new Intent();
-        intent.setType("image/*");
+        intent.setType("file/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
-                && data != null && data.getData() != null )
-        {
-            filePath = data.getData();
-            try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
-                etMessage.setText(filePath.toString());
-                Toast.makeText(MainActivity.this,"Choose file success",Toast.LENGTH_SHORT).show();
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
+                && data != null && data.getData() != null) {
+            final Uri filePath = data.getData();
+
+            String[] parsefileName = filePath.toString().split("[/]");
+            final String fileName = parsefileName[parsefileName.length - 1];
+//                FileInputStream file=new FileInputStream(String.valueOf(filePath));
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Socket socket = SocketUtil.socketMap.get(ip);
+                        PrintWriter output = SocketWriter.writer.get(ip);
+                        output.write(SEND_FILE + "\n");
+                        output.write(fileName + "\n");
+                        output.flush();
+                        File sendFile = new File(filePath.getPath());
+                        DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+                        FileInputStream fis = new FileInputStream(sendFile);
+                        byte[] myBuffer = new byte[4069];
+                        int bytesRead = 0;
+                        while (fis.read(myBuffer) > 0) {
+                            dos.write(myBuffer);
+                        }
+                        fis.close();
+                        dos.close();
+                        etMessage.setText(fileName);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                User user = new User("server");
+                                Message messageReal = new Message(fileName, user, true);
+                                messagesListView.add(messageReal);
+                                messageListViewAdapter.notifyDataSetChanged();
+                            }
+                        });
+                        Toast.makeText(MainActivity.this, "Choose file success", Toast.LENGTH_SHORT).show();
+                    } catch (IOException e) {
+                        Log.e("1234", e.toString());
+                    }
+
+                }
+            }).start();
         }
     }
 
@@ -149,8 +185,8 @@ public class MainActivity extends AppCompatActivity {
                         SocketUtil.socketMap.put(ip, socket);
                         PrintWriter output = new PrintWriter(socket.getOutputStream());
                         BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                        SocketReader.reader.put(ip,input);
-                        SocketWriter.writer.put(ip,output);
+                        SocketReader.reader.put(ip, input);
+                        SocketWriter.writer.put(ip, output);
 //                        EchoThread thread = new EchoThread(socket)
                         new ReqResThread().run();
                     } catch (IOException e) {
@@ -161,14 +197,14 @@ public class MainActivity extends AppCompatActivity {
             listThread.add(a);
             a.start();
         } else {
-                if (!resocket){
-                    top.setVisibility(View.GONE);
-                    bottom.setVisibility(View.VISIBLE);
-                    listView.setVisibility(View.VISIBLE);
-                }
-                Thread b = new Thread(new ReceiverThread());
-                listThread.add(b);
-                b.start();
+            if (!resocket) {
+                top.setVisibility(View.GONE);
+                bottom.setVisibility(View.VISIBLE);
+                listView.setVisibility(View.VISIBLE);
+            }
+            Thread b = new Thread(new ReceiverThread());
+            listThread.add(b);
+            b.start();
         }
     }
 
@@ -181,6 +217,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             BufferedReader input = SocketReader.reader.get(ip);
+            Socket socket = SocketUtil.socketMap.get(ip);
             while (!Thread.interrupted()) {
                 try {
                     final String message = input.readLine();
@@ -198,15 +235,43 @@ public class MainActivity extends AppCompatActivity {
                             new ReqResThread().run();
                             break;
                         }
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                User user = new User("server");
-                                Message messageReal = new Message(message, user, false);
-                                messagesListView.add(messageReal);
-                                messageListViewAdapter.notifyDataSetChanged();
+                        if (message.equals(SEND_FILE)) {
+                            String root = Environment.getExternalStorageDirectory().toString();
+                            final String fileName = input.readLine();
+                            PrintWriter output = SocketWriter.writer.get(ip);
+                            DataInputStream dis = new DataInputStream(socket.getInputStream());
+                            FileOutputStream fos = new FileOutputStream(root + fileName);
+                            byte[] buffer = new byte[4069];
+                            int filesize = 15123;
+                            int read = 0;
+                            int remaining = filesize;
+                            while ((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
+                                remaining -= read;
+                                fos.write(buffer, 0, read);
                             }
-                        });
+                            fos.close();
+                            dis.close();
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    User user = new User("server");
+                                    Message messageReal = new Message(fileName, user, false);
+                                    messagesListView.add(messageReal);
+                                    messageListViewAdapter.notifyDataSetChanged();
+                                }
+                            });
+                        } else {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    User user = new User("server");
+                                    Message messageReal = new Message(message, user, false);
+                                    messagesListView.add(messageReal);
+                                    messageListViewAdapter.notifyDataSetChanged();
+                                }
+                            });
+                        }
+
 
                     }
 
@@ -254,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             PrintWriter output = SocketWriter.writer.get(ip);
             BufferedReader input = SocketReader.reader.get(ip);
-            Log.e("hello", "10" );
+            Log.e("hello", "10");
             output.write(REQUEST_CHAT + "\n");
             output.flush();
             while (true) {
@@ -288,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
 //        backPressed = true;
         ArrayList<UserInfo> userArr = HomeActivity.userArrayList;
-        Toast.makeText(this, onlineFriend?"1":"0", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, onlineFriend ? "1" : "0", Toast.LENGTH_SHORT).show();
         if (onlineFriend) {
             for (int i = 0; i < userArr.size(); i++) {
                 UserInfo info = userArr.get(i);
@@ -308,7 +373,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        for(Thread thread:listThread){
+        for (Thread thread : listThread) {
             thread.interrupt();
         }
         new Thread(new Runnable() {
@@ -319,6 +384,7 @@ public class MainActivity extends AppCompatActivity {
                 output.flush();
             }
         }).start();
+
         super.onBackPressed();
     }
 }
