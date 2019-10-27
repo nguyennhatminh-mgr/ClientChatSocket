@@ -106,7 +106,7 @@ public class SignUpActivity extends AppCompatActivity {
                 }
                 else{
 //                    Toast.makeText(SignUpActivity.this,"Not valid password",Toast.LENGTH_SHORT).show();
-                    edtUsername.setError("Not valid password");
+                    edtUsername.setError("Not valid username");
                 }
             }
         });
@@ -123,7 +123,7 @@ public class SignUpActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                if(edtPassword.getText().toString().matches("([0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z])*")){
+                if(edtPassword.getText().toString().matches("[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z]([0-9a-zA-Z])*")){
                     checkPassword=1;
                 }
                 else{
