@@ -30,6 +30,7 @@ import huy.nguyen.androidclient.Model.User;
 import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.Utilities.EchoThread;
 import huy.nguyen.androidclient.Utilities.Interface.ActiveCallback;
+import huy.nguyen.androidclient.Utilities.SocketProtocol;
 import huy.nguyen.androidclient.Utilities.SocketReader;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
 import huy.nguyen.androidclient.Utilities.SocketWriter;
@@ -240,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-//        backPressed = true;
+        backPressed = true;
         ArrayList<UserInfo> userArr = HomeActivity.userArrayList;
         Toast.makeText(this, onlineFriend?"1":"0", Toast.LENGTH_SHORT).show();
         if (onlineFriend) {
@@ -274,5 +275,13 @@ public class MainActivity extends AppCompatActivity {
             }
         }).start();
         super.onBackPressed();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (!backPressed){
+
+        }
     }
 }

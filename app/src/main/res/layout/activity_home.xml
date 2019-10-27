@@ -38,6 +38,12 @@
             android:backgroundTint="@color/backgroundMessage"/>
     </LinearLayout>
 
+    <Button
+        android:id="@+id/button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Button" />
+
     <TextView
         android:layout_marginLeft="5dp"
         android:layout_marginTop="10dp"

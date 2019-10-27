@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -23,6 +24,7 @@ import huy.nguyen.androidclient.MainActivity;
 import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.R;
 import huy.nguyen.androidclient.Utilities.Interface.OnlineUserCallback;
+import huy.nguyen.androidclient.Utilities.SocketProtocol;
 import huy.nguyen.androidclient.Utilities.SocketReader;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
 import huy.nguyen.androidclient.Utilities.SocketWriter;
@@ -35,6 +37,7 @@ public class HomeActivity extends AppCompatActivity {
     public static ArrayList<UserInfo> userArrayList;
     HomeUserAdpter homeUserAdpter;
     ListView listView;
+    Button button;
     Socket conn;
     ServerSocket serverSocket;
     Thread Thread1 = null;
@@ -46,12 +49,20 @@ public class HomeActivity extends AppCompatActivity {
     private static final String END_SOCKET = "END_SOCKET";
 
     private boolean res = false;
+    private boolean buttonPressed = false;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        buttonPressed = true;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         listView = findViewById(R.id.lvListUserInHome);
+        button = findViewById(R.id.button);
         userArrayList = new ArrayList<>();
         homeUserAdpter = new HomeUserAdpter(HomeActivity.this, userArrayList);
         listView.setAdapter(homeUserAdpter);
@@ -75,27 +86,33 @@ public class HomeActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 final UserInfo info = (UserInfo) homeUserAdpter.getItem(position);
                 Intent intent = new Intent(HomeActivity.this, MainActivity.class);
-                Toast.makeText(HomeActivity.this, info.isNewMessage()?"1":"0", Toast.LENGTH_SHORT).show();
+                Toast.makeText(HomeActivity.this, info.isNewMessage() ? "1" : "0", Toast.LENGTH_SHORT).show();
                 if (info.isNewMessage()) {
-                    Log.e("hello", "4" );
+                    Log.e("hello", "4");
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
                             PrintWriter writer = SocketWriter.writer.get(info.getIp());
-                            writer.write(RESPONSE_CHAT+"\n");
+                            writer.write(RESPONSE_CHAT + "\n");
                             writer.flush();
                         }
                     }).start();
-                } else{
-                    if (socketMap.containsKey(info.getIp())) intent.putExtra("resocket",true);
-                    Log.e("hello", "5" );
+                } else {
+                    if (socketMap.containsKey(info.getIp())) intent.putExtra("resocket", true);
+                    Log.e("hello", "5");
                 }
-                intent.putExtra("PeerIp",info.getIp());
+                intent.putExtra("PeerIp", info.getIp());
                 startActivity(intent);
 
             }
         });
         initMyServerSocket();
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                doLogOut();
+            }
+        });
     }
 
     private void initMyServerSocket() {
@@ -111,20 +128,20 @@ public class HomeActivity extends AppCompatActivity {
                 while (true) {
                     Socket socket;
                     socket = serverSocket.accept();
-                    Log.e("hello", "1" );
+                    Log.e("hello", "1");
                     String[] arrIp = socket.getRemoteSocketAddress().toString().split(":");
                     String ip = arrIp[0].substring(1);
-                    socketMap.put(ip,socket);
+                    socketMap.put(ip, socket);
                     BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    SocketReader.reader.put(ip,input);
+                    SocketReader.reader.put(ip, input);
                     PrintWriter writer = new PrintWriter(socket.getOutputStream());
-                    SocketWriter.writer.put(ip,writer);
+                    SocketWriter.writer.put(ip, writer);
                     ServerThread serverThread = new ServerThread(socket);
-                    ThreadManager.threadList.put(ip,serverThread);
+                    ThreadManager.threadList.put(ip, serverThread);
                     serverThread.start();
                 }
             } catch (IOException e) {
-                Log.e("123","error 1 "+e);
+                Log.e("123", "error 1 " + e);
                 e.printStackTrace();
             }
         }
@@ -144,17 +161,17 @@ public class HomeActivity extends AppCompatActivity {
             final String ip = arrIp[0].substring(1);
             try {
                 input = SocketReader.reader.get(ip);
-                Log.e("hello", "2" );
+                Log.e("hello", "2");
                 String msg;
-                while (true){
-                    msg=input.readLine();
+                while (true) {
+                    msg = input.readLine();
                     if (msg.equals(REQUEST_CHAT)) {
-                        Log.e("hello", "3" );
-                        for (int i=0;i<userArrayList.size();i++){
+                        Log.e("hello", "3");
+                        for (int i = 0; i < userArrayList.size(); i++) {
                             UserInfo info = userArrayList.get(i);
-                            if (info.getIp().equals(ip)){
+                            if (info.getIp().equals(ip)) {
                                 info.setNewMessage(true);
-                                userArrayList.set(i,info);
+                                userArrayList.set(i, info);
                                 break;
                             }
                         }
@@ -163,9 +180,26 @@ public class HomeActivity extends AppCompatActivity {
                 }
 
             } catch (Exception e) {
-                Log.e("123","error 2 "+e);
+                Log.e("123", "error 2 " + e);
                 e.printStackTrace();
             }
         }
+    }
+
+    private void doLogOut(){
+        final Socket socket = SocketUtil.getSocket();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    PrintWriter writer = new PrintWriter(socket.getOutputStream());
+                    writer.print(SocketProtocol.LOGOUT_ACTION+"\n");
+                    writer.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+        finish();
     }
 }
