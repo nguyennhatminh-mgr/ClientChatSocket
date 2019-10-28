@@ -10,7 +10,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="visible"
+        android:visibility="gone"
         android:orientation="vertical"
         android:gravity="center_vertical|center_horizontal"
         android:id="@+id/alert">
@@ -29,7 +29,7 @@
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
+        android:visibility="visible"
         android:id="@+id/lstMessage"
         android:divider="@android:color/transparent"
         android:dividerHeight="5dp"
@@ -45,7 +45,7 @@
         android:orientation="horizontal"
         android:layout_alignParentBottom="true"
         android:gravity="center"
-        android:visibility="gone"
+        android:visibility="visible"
         android:layout_marginTop="10dp">
 
         <ImageView

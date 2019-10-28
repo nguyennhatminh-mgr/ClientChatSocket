@@ -4,7 +4,6 @@ public class SocketProtocol {
     public static final String REQUEST_CHAT = "REQUEST_CHAT";
     public static final String RESPONSE_CHAT = "RESPONSE_CHAT";
 
-    public static final String END_CHAT = "END_CHAT";
 
     public static final String LOGIN_ACTION = "LOGIN";
     public static final String SIGNUP_ACTION = "SIGNUP";
@@ -19,6 +18,13 @@ public class SocketProtocol {
     public static final String NOTIFY_ONLINE = "NOTIFY_ONLINE";
     public static final String REQUEST_ONLINE = "REQUEST_ONLINE";
     public static final String END_NOTIFY_ONLINE = "END_NOTIFY_ONLINE";
+
+    public static final String TEXT_MESSAGE = "TEXT_MESSAGE";
+    public static final String FILE_MESSAGE = "FILE_MESSAGE";
+    public static final String END_CHAT = "END_CHAT";
+
+    public static final String CHAT_SOCKET = "CHAT_SOCKET";
+    public static final String FILE_SOCKET = "FILE_SOCKET";
 
     public static final String LOGOUT_ACTION = "LOGOUT";
     public static final String LOGOUT_DONE = "LOGOUT_DONE";
