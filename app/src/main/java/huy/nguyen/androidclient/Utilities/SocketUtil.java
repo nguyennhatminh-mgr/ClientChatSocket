@@ -167,6 +167,7 @@ public class SocketUtil {
                                         userlist.add(UserInfo.parseUser(user));
                                     }
                                     callback.retriveOnlineList(userlist);
+                                    break;
                                 }
                             }
                         }

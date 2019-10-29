@@ -3,6 +3,12 @@ package huy.nguyen.androidclient.Model;
 public class User {
     String name;
     String url;
+    String ip;
+
+    public User(String name, String ip) {
+        this.name = name;
+        this.ip = ip;
+    }
 
     public String getName() {
         return name;

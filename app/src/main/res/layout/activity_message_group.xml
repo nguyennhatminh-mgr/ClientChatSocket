@@ -1,0 +1,57 @@
+<?xml version = "1.0" encoding = "utf-8"?>
+<RelativeLayout xmlns:android = "http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools = "http://schemas.android.com/tools"
+    android:layout_width = "match_parent"
+    android:layout_height = "match_parent"
+    android:layout_margin = "16dp"
+    tools:context = ".MainActivity"
+    >
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/lvGroupMessage"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="5dp"
+        android:nestedScrollingEnabled="true"
+        android:layout_above="@id/lyGroupBot"
+        />
+    <LinearLayout
+        android:id="@+id/lyGroupBot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:layout_marginTop="10dp">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            app:srcCompat="@drawable/ic_file_upload_black_24dp"
+            android:id="@+id/btnGroupFileUpLoad"
+            android:layout_weight="1"/>
+        <EditText
+            android:id = "@+id/edtGroupMessage"
+            android:layout_width = "wrap_content"
+            android:layout_height = "wrap_content"
+            android:hint = "Enter Message"
+            android:inputType = "text"
+            android:layout_weight="10"
+            android:background="@drawable/frame_message_border"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:layout_marginRight="5dp"
+            android:paddingLeft="15dp"
+            android:paddingRight="5dp"/>
+        <ImageView
+            android:id = "@+id/btnGroupSend"
+            android:layout_width = "wrap_content"
+            android:layout_height = "match_parent"
+            android:text = "SEND"
+            android:layout_weight="1"
+            android:background="@drawable/ic_send_black_24dp"
+            />
+    </LinearLayout>
+
+</RelativeLayout>
