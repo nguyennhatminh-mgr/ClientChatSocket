@@ -1,22 +1,23 @@
 package huy.nguyen.androidclient.Home;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -26,6 +27,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import huy.nguyen.androidclient.MainActivity;
+import huy.nguyen.androidclient.Model.Message;
+import huy.nguyen.androidclient.Model.User;
 import huy.nguyen.androidclient.Message.MessageGroupActivity;
 import huy.nguyen.androidclient.Model.User;
 import huy.nguyen.androidclient.Model.UserInfo;
@@ -41,14 +44,14 @@ import huy.nguyen.androidclient.Utilities.ThreadManager;
 import static huy.nguyen.androidclient.Utilities.SocketUtil.socketMap;
 
 public class HomeActivity extends AppCompatActivity {
-
+    private static int PICK_IMAGE_REQUEST = 113;
     public static ArrayList<UserInfo> userArrayList;
     ArrayList<UserInfo> listUserInGroup;
     HomeUserAdpter groupUserAdapter;
     ListView listViewGroup;
     HomeUserAdpter homeUserAdpter;
     ListView listView;
-    Button button;
+    Button button,button2;
     Button btnCreateGroup;
     ServerSocket serverSocket;
     Thread Thread1 = null;
@@ -63,38 +66,25 @@ public class HomeActivity extends AppCompatActivity {
         listView = findViewById(R.id.lvListUserInHome);
         listViewGroup=findViewById(R.id.lvUserInGroup);
         button = findViewById(R.id.button);
-//        checkBox=findViewById(R.id.chkAddToGroup);
+        button2 = findViewById(R.id.button2);
         btnCreateGroup = findViewById(R.id.btnCreateGroup);
         userArrayList = new ArrayList<>();
         homeUserAdpter = new HomeUserAdpter(HomeActivity.this, userArrayList);
         listView.setAdapter(homeUserAdpter);
 
+        initSetup();
         listUserInGroup=new ArrayList<>();
         groupUserAdapter=new HomeUserAdpter(HomeActivity.this,listUserInGroup);
         listViewGroup.setAdapter(groupUserAdapter);
 
 
-        SocketUtil.retriveOnlineUser(new OnlineUserCallback() {
-            @Override
-            public void retriveOnlineList(final ArrayList<UserInfo> onlineList) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        userArrayList.clear();
-                        userArrayList.addAll(onlineList);
-                        Toast.makeText(HomeActivity.this, userArrayList.toString(), Toast.LENGTH_SHORT).show();
-                        homeUserAdpter.notifyDataSetChanged();
-                    }
-                });
-
-            }
-        });
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 final UserInfo info = (UserInfo) homeUserAdpter.getItem(position);
                 Intent intent = new Intent(HomeActivity.this, MainActivity.class);
                 intent.putExtra("PeerIp", info.getIp());
+                intent.putExtra("AccountName",info.getAccountname());
                 startActivity(intent);
 
             }
@@ -177,6 +167,110 @@ public class HomeActivity extends AppCompatActivity {
                 }
             }
         }).start();
+        button2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                uploadImage();
+            }
+        });
+    }
+
+    private void initSetup() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                PrintWriter output = SocketUtil.writer;
+                output.write(SocketProtocol.REQUEST_ONLINE+"\n");
+                output.flush();
+                BufferedReader input = SocketUtil.reader;
+                while (true) {
+                    try {
+                        String code = input.readLine();
+                        if (code!=null){
+                            switch (code){
+                                case SocketProtocol.NOTIFY_ONLINE:{
+                                    String user;
+                                    final ArrayList<UserInfo> userlist = new ArrayList<>();
+                                    while (!(user=input.readLine()).equals(SocketProtocol.END_NOTIFY_ONLINE)){
+                                        userlist.add(UserInfo.parseUser(user));
+                                    }
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            userArrayList.clear();
+                                            userArrayList.addAll(userlist);
+                                            Toast.makeText(HomeActivity.this, userArrayList.toString(), Toast.LENGTH_SHORT).show();
+                                            homeUserAdpter.notifyDataSetChanged();
+                                        }
+                                    });
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return;
+                    }
+                }
+            }
+        }).start();
+    }
+
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
+//                && data != null && data.getData() != null) {
+//            final Uri uri = data.getData();
+//
+//            final String fileName = getFileName(uri);
+//
+//            new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    try {
+//                        Socket socket = new Socket(ip, 8080);
+//                        PrintWriter fileWriter = new PrintWriter(socket.getOutputStream());
+//                        fileWriter.write(SocketProtocol.FILE_SOCKET + "\n");
+//                        fileWriter.flush();
+//                        fileWriter.write(fileName + "\n");
+//                        Log.e("1234", "filename " + fileName);
+//                        fileWriter.flush();
+//                        PrintWriter chatWriter = SocketWriter.writer.get(ip);
+//                        chatWriter.write(SocketProtocol.FILE_MESSAGE + "\n");
+//                        chatWriter.write(fileName + "\n");
+//                        chatWriter.flush();
+//                        FileInputStream stream = (FileInputStream) getContentResolver().openInputStream(uri);
+//                        DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+//                        byte[] myBuffer = new byte[4069];
+//                        while (stream.read(myBuffer) > 0) {
+//                            dos.write(myBuffer);
+//                        }
+//                        stream.close();
+////                        dos.close();
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                User user = new User("server");
+//                                Message messageReal = new Message(fileName, user, true);
+//                                messagesListView.add(messageReal);
+//                                messageListViewAdapter.notifyDataSetChanged();
+//                            }
+//                        });
+//                    } catch (Exception e) {
+//                        Log.e("1234", "error in sending " + e.toString());
+//                    }
+//
+//                }
+//            }).start();
+//        }
+//    }
+
+    private void uploadImage() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
     }
 
     private void initMyServerSocket() {

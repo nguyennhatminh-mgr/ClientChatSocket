@@ -26,7 +26,8 @@ public class SocketUtil {
     private static final String END_NOTIFY_ONLINE = "END_NOTIFY_ONLINE";
     private static final String REQUEST_ONLINE = "REQUEST_ONLINE";
     private static final int SERVER_PORT = 8080;
-
+    public static BufferedReader reader;
+    public static PrintWriter writer;
 
     public static void setSocket(Socket valuesocket) {
         socket = valuesocket;
@@ -34,6 +35,15 @@ public class SocketUtil {
 
     public static Socket getSocket() {
         return socket;
+    }
+
+    public static void initSetup(){
+        try {
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            writer = new PrintWriter(socket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static ServerSocket getServerSocket() throws IOException {
@@ -185,5 +195,6 @@ public class SocketUtil {
         });
         getOnlineUserThread.start();
     }
+
 
 }

@@ -133,7 +133,7 @@ public class MessageGroupActivity extends AppCompatActivity {
                                     }
                                 }
                             }
-                            
+
                         }
                         else if(nofityGroup.equals("MESSAGE_RESPONE_IN_GROUP")){
 //                            listMessage.clear();

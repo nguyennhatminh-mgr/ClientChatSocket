@@ -174,6 +174,7 @@ public class LoginActivity extends AppCompatActivity {
                 try {
                     Socket socket = new Socket("192.168.43.62", 8080);
                     SocketUtil.setSocket(socket);
+                    SocketUtil.initSetup();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
