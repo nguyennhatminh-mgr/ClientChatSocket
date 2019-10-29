@@ -29,22 +29,26 @@ import java.util.ArrayList;
 import huy.nguyen.androidclient.MainActivity;
 import huy.nguyen.androidclient.Model.Message;
 import huy.nguyen.androidclient.Model.User;
+import huy.nguyen.androidclient.Message.MessageGroupActivity;
+import huy.nguyen.androidclient.Model.User;
 import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.R;
+import huy.nguyen.androidclient.Utilities.GroupUtil;
 import huy.nguyen.androidclient.Utilities.Interface.OnlineUserCallback;
 import huy.nguyen.androidclient.Utilities.SocketProtocol;
 import huy.nguyen.androidclient.Utilities.SocketReader;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
 import huy.nguyen.androidclient.Utilities.SocketWriter;
+import huy.nguyen.androidclient.Utilities.ThreadManager;
 
-import static huy.nguyen.androidclient.Utilities.SocketProtocol.END_NOTIFY_ONLINE;
-import static huy.nguyen.androidclient.Utilities.SocketProtocol.NOTIFY_ONLINE;
-import static huy.nguyen.androidclient.Utilities.SocketProtocol.REQUEST_ONLINE;
 import static huy.nguyen.androidclient.Utilities.SocketUtil.socketMap;
 
 public class HomeActivity extends AppCompatActivity {
     private static int PICK_IMAGE_REQUEST = 113;
     public static ArrayList<UserInfo> userArrayList;
+    ArrayList<UserInfo> listUserInGroup;
+    HomeUserAdpter groupUserAdapter;
+    ListView listViewGroup;
     HomeUserAdpter homeUserAdpter;
     ListView listView;
     Button button,button2;
@@ -57,7 +61,10 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        createSocket();
         listView = findViewById(R.id.lvListUserInHome);
+        listViewGroup=findViewById(R.id.lvUserInGroup);
         button = findViewById(R.id.button);
         button2 = findViewById(R.id.button2);
         btnCreateGroup = findViewById(R.id.btnCreateGroup);
@@ -66,6 +73,10 @@ public class HomeActivity extends AppCompatActivity {
         listView.setAdapter(homeUserAdpter);
 
         initSetup();
+        listUserInGroup=new ArrayList<>();
+        groupUserAdapter=new HomeUserAdpter(HomeActivity.this,listUserInGroup);
+        listViewGroup.setAdapter(groupUserAdapter);
+
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -78,13 +89,84 @@ public class HomeActivity extends AppCompatActivity {
 
             }
         });
+
         initMyServerSocket();
+//        initGroupSocket();
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 doLogOut();
             }
         });
+
+        btnCreateGroup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(HomeActivity.this, MessageGroupActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
+
+    private void createSocket() {
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Socket socket = new Socket("192.168.43.62", 8080);
+                    GroupUtil.setSocket(socket);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    private void initGroupSocket() {
+
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Socket socket = GroupUtil.getSocket();
+                    PrintWriter output=new PrintWriter(socket.getOutputStream());
+                    output.write("GROUP_ACTION"+"\n");
+                    output.flush();
+                    BufferedReader input=new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    while (true){
+                        String msg=input.readLine();
+                        Log.e("123",msg);
+                        if(msg.equals("NOTIFY_JOIN_TO_GROUP")){
+                            String temp;
+//                            Log.e("123 temp", temp );
+                            listUserInGroup.clear();
+                            while (!(temp=input.readLine()).equals("END_NOTIFY_JOIN_TO_GROUP")){
+                                if(temp!=null){
+                                    String[] temp1=temp.split("[:]");
+                                    if(temp1.length==2){
+                                        final UserInfo user=new UserInfo(temp1[0],temp1[1]);
+//                            Log.e("123",temp1.toString());
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+
+                                                listUserInGroup.add(user);
+                                                groupUserAdapter.notifyDataSetChanged();
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+//                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -98,7 +180,7 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void run() {
                 PrintWriter output = SocketUtil.writer;
-                output.write(REQUEST_ONLINE+"\n");
+                output.write(SocketProtocol.REQUEST_ONLINE+"\n");
                 output.flush();
                 BufferedReader input = SocketUtil.reader;
                 while (true) {
@@ -106,10 +188,10 @@ public class HomeActivity extends AppCompatActivity {
                         String code = input.readLine();
                         if (code!=null){
                             switch (code){
-                                case NOTIFY_ONLINE:{
+                                case SocketProtocol.NOTIFY_ONLINE:{
                                     String user;
                                     final ArrayList<UserInfo> userlist = new ArrayList<>();
-                                    while (!(user=input.readLine()).equals(END_NOTIFY_ONLINE)){
+                                    while (!(user=input.readLine()).equals(SocketProtocol.END_NOTIFY_ONLINE)){
                                         userlist.add(UserInfo.parseUser(user));
                                     }
                                     runOnUiThread(new Runnable() {

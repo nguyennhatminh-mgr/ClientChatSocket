@@ -42,7 +42,7 @@
         android:id="@+id/button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Button" />
+        android:text="Log out" />
 
     <Button
         android:id="@+id/button2"
@@ -56,27 +56,39 @@
         android:orientation="horizontal"
         android:layout_marginLeft="5dp"
         android:layout_marginTop="10dp"
+        android:layout_marginRight="5dp"
         android:gravity="center">
-        <TextView
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+            <TextView
 
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="List users online"
+                android:textSize="22dp"
+                android:textColor="@color/textColor"
+                />
+        </LinearLayout>
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="List users online"
-            android:textSize="22dp"
-            android:textColor="@color/textColor"
             android:layout_weight="1"
-            />
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Create Group"
-            android:background="@drawable/frame_message_border"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp"
-            android:textColor="@color/textLoginColor"
-            android:backgroundTint="@color/backgroundMessage"
-            android:id="@+id/btnCreateGroup"
-            />
+            android:gravity="right">
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Join to Group"
+                android:background="@drawable/frame_message_border"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:textColor="@color/textLoginColor"
+                android:backgroundTint="@color/backgroundMessage"
+                android:id="@+id/btnCreateGroup"
+                />
+        </LinearLayout>
+
     </LinearLayout>
 
 
@@ -88,4 +100,9 @@
         android:padding="10dp"
         android:id="@+id/lvListUserInHome"
         />
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/lvUserInGroup"
+        android:background="@drawable/frame_message_border"/>
 </LinearLayout>
