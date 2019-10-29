@@ -178,8 +178,13 @@ public class MainActivity extends AppCompatActivity {
                         FileInputStream stream = (FileInputStream) getContentResolver().openInputStream(uri);
                         DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
                         byte[] myBuffer = new byte[4069];
-                        while (stream.read(myBuffer) > 0) {
-                            dos.write(myBuffer);
+//                        while (stream.read(myBuffer) > 0) {
+//                            dos.write(myBuffer);
+//                        }
+                        int count;
+                        while ((count = stream.read(myBuffer)) > 0)
+                        {
+                            dos.write(myBuffer, 0, count);
                         }
                         stream.close();
 //                        dos.close();

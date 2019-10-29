@@ -38,6 +38,7 @@ public class LoginActivity extends AppCompatActivity {
     String TVTT_IP = "192.168.200.13";
     String TV_IP = "10.228.230.101";
     String KTX_IP = "172.17.23.47";
+    String IP = HUY_IP;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -151,11 +152,7 @@ public class LoginActivity extends AppCompatActivity {
             edtPassword.setText(intent.getStringExtra("password"));
         }
 
-        try {
-            SocketUtil.setMyIp(getLocalIpAddress());
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+        SocketUtil.setServerIp(IP);
     }
 
     private String getLocalIpAddress() throws UnknownHostException {
@@ -172,7 +169,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Socket socket = new Socket(HUY_IP, 8080);
+                    Socket socket = new Socket(IP, 8080);
                     SocketUtil.setSocket(socket);
                     SocketUtil.initSetup();
                 } catch (IOException e) {

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import huy.nguyen.androidclient.Model.UserAccount;
 import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.Utilities.Interface.LoginCallback;
 import huy.nguyen.androidclient.Utilities.Interface.OnlineUserCallback;
@@ -20,7 +21,8 @@ import huy.nguyen.androidclient.Utilities.Interface.SignupCallback;
 public class SocketUtil {
     private static Socket socket;
     private static ServerSocket serverSocket;
-    private static String myIp;
+    private static String serverIp;
+    private static UserAccount myAccount;
     public static Map<String, Socket> socketMap = new HashMap<>();
     private static final String NOTIFY_ONLINE = "NOTIFY_ONLINE";
     private static final String END_NOTIFY_ONLINE = "END_NOTIFY_ONLINE";
@@ -35,6 +37,14 @@ public class SocketUtil {
 
     public static Socket getSocket() {
         return socket;
+    }
+
+    public static UserAccount getMyAccount() {
+        return myAccount;
+    }
+
+    public static void setMyAccount(UserAccount myAccount) {
+        SocketUtil.myAccount = myAccount;
     }
 
     public static void initSetup(){
@@ -53,12 +63,12 @@ public class SocketUtil {
         return serverSocket;
     }
 
-    public static String getMyIp() {
-        return myIp;
+    public static String getServerIp() {
+        return serverIp;
     }
 
-    public static void setMyIp(String myIp) {
-        SocketUtil.myIp = myIp;
+    public static void setServerIp(String myIp) {
+        SocketUtil.serverIp = myIp;
     }
 
     public static void doSignUp(final String username, final String password, final String accountname, final SignupCallback callback) {
