@@ -178,13 +178,17 @@ public class SocketUtil {
                     BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     while (true){
                         String code = input.readLine();
+                        Log.e("1234", code );
                         if (code!=null){
                             switch (code){
                                 case NOTIFY_ONLINE:{
                                     String user;
                                     ArrayList<UserInfo> userlist = new ArrayList<>();
                                     while (!(user=input.readLine()).equals(END_NOTIFY_ONLINE)){
-                                        userlist.add(UserInfo.parseUser(user));
+                                        if(user.indexOf(":")!=-1){
+                                            userlist.add(UserInfo.parseUser(user));
+                                        }
+
                                     }
                                     callback.retriveOnlineList(userlist);
                                     break;

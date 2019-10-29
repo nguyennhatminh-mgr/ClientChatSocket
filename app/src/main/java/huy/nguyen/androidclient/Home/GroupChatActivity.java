@@ -63,6 +63,7 @@ public class GroupChatActivity extends AppCompatActivity {
             public void onClick(View view) {
                 GroupChat groupChat=new GroupChat(groupName.getText().toString(),listGroupUser);
                 //TODO
+
                 finish();
             }
         });
