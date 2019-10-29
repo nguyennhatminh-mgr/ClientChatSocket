@@ -54,6 +54,14 @@
             app:srcCompat="@drawable/ic_file_upload_black_24dp"
             android:id="@+id/btnFileUpLoad"
             android:layout_weight="1"/>
+
+        <ImageView
+            android:id="@+id/btnCall"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            app:srcCompat="@drawable/ic_call_black_24dp" />
+
         <EditText
             android:id = "@+id/etMessage"
             android:layout_width = "wrap_content"
@@ -61,7 +69,7 @@
             android:hint = "Enter Message"
             android:inputType = "text"
             android:layout_below="@id/lstMessage"
-            android:layout_weight="10"
+            android:layout_weight="8"
             android:background="@drawable/frame_message_border"
             android:paddingTop="5dp"
             android:paddingBottom="5dp"
