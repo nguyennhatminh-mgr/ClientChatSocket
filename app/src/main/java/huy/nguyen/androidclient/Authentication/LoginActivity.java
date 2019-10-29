@@ -36,6 +36,8 @@ public class LoginActivity extends AppCompatActivity {
     String MINH_IP = "192.168.137.1";
     String HUY_IP = "192.168.43.226";
     String TVTT_IP = "192.168.200.13";
+    String TV_IP = "10.228.230.101";
+    String KTX_IP = "172.17.23.47";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

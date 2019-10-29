@@ -1,12 +1,15 @@
 package huy.nguyen.androidclient;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.graphics.Bitmap;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -18,6 +21,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -30,8 +35,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import huy.nguyen.androidclient.Home.HomeActivity;
@@ -39,8 +42,6 @@ import huy.nguyen.androidclient.Message.MessageListViewAdapter;
 import huy.nguyen.androidclient.Model.Message;
 import huy.nguyen.androidclient.Model.User;
 import huy.nguyen.androidclient.Model.UserInfo;
-import huy.nguyen.androidclient.Utilities.EchoThread;
-import huy.nguyen.androidclient.Utilities.Interface.ActiveCallback;
 import huy.nguyen.androidclient.Utilities.SocketProtocol;
 import huy.nguyen.androidclient.Utilities.SocketReader;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
@@ -51,15 +52,10 @@ public class MainActivity extends AppCompatActivity {
     TextView tvMessages;
     EditText etMessage;
     ImageView btnSend, btnUploadFile;
-    Button btnSwap;
-    String SERVER_IP;
-    int SERVER_PORT;
-    Socket socket;
-    PrintWriter output;
     LinearLayout top, bottom;
-    private BufferedReader input;
     private final int PICK_IMAGE_REQUEST = 71;
     String ip;
+    BufferedReader input;
 
     private ArrayList<Thread> listThread = new ArrayList<>();
 
@@ -89,6 +85,16 @@ public class MainActivity extends AppCompatActivity {
         addControls();
 
         initSocket();
+        try {
+            if (Build.VERSION.SDK_INT >= 23) {
+                int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                }
+            }
+        } catch (Exception e) {
+            Log.e("1234", "error" + e);
+        }
 
         messagesListView = new ArrayList<>();
         messageListViewAdapter = new MessageListViewAdapter(MainActivity.this, messagesListView);
@@ -114,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void chooseImage() {
         Intent intent = new Intent();
-        intent.setType("file/*");
+        intent.setType("*/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
     }
@@ -124,31 +130,33 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
                 && data != null && data.getData() != null) {
-            final Uri filePath = data.getData();
+            final Uri uri = data.getData();
 
-            String[] parsefileName = filePath.toString().split("[/]");
-            final String fileName = parsefileName[parsefileName.length - 1];
-//                FileInputStream file=new FileInputStream(String.valueOf(filePath));
+            final String fileName = getFileName(uri);
+
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        Socket socket = SocketUtil.socketMap.get(ip);
-                        PrintWriter output = SocketWriter.writer.get(ip);
-                        output.write(SEND_FILE + "\n");
-                        output.write(fileName + "\n");
-                        output.flush();
-                        File sendFile = new File(filePath.getPath());
+                        Socket socket = new Socket(ip, 8080);
+                        PrintWriter fileWriter = new PrintWriter(socket.getOutputStream());
+                        fileWriter.write(SocketProtocol.FILE_SOCKET + "\n");
+                        fileWriter.flush();
+                        fileWriter.write(fileName + "\n");
+                        Log.e("1234", "filename "+fileName );
+                        fileWriter.flush();
+                        PrintWriter chatWriter = SocketWriter.writer.get(ip);
+                        chatWriter.write(SocketProtocol.FILE_MESSAGE+"\n");
+                        chatWriter.write(fileName+"\n");
+                        chatWriter.flush();
+                        FileInputStream stream = (FileInputStream) getContentResolver().openInputStream(uri);
                         DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-                        FileInputStream fis = new FileInputStream(sendFile);
                         byte[] myBuffer = new byte[4069];
-                        int bytesRead = 0;
-                        while (fis.read(myBuffer) > 0) {
+                        while (stream.read(myBuffer) > 0) {
                             dos.write(myBuffer);
                         }
-                        fis.close();
-                        dos.close();
-                        etMessage.setText(fileName);
+                        stream.close();
+//                        dos.close();
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -158,9 +166,8 @@ public class MainActivity extends AppCompatActivity {
                                 messageListViewAdapter.notifyDataSetChanged();
                             }
                         });
-                        Toast.makeText(MainActivity.this, "Choose file success", Toast.LENGTH_SHORT).show();
-                    } catch (IOException e) {
-                        Log.e("1234", e.toString());
+                    } catch (Exception e) {
+                        Log.e("1234", "error in sending "+e.toString());
                     }
 
                 }
@@ -171,9 +178,6 @@ public class MainActivity extends AppCompatActivity {
     private void initSocket() {
         Intent intent = getIntent();
         ip = intent.getStringExtra("PeerIp");
-        boolean resocket = false;
-        if (intent.hasExtra("resocket"))
-            resocket = true;
         final Map<String, Socket> socketMap = SocketUtil.socketMap;
         if (!socketMap.containsKey(ip)) {
             Thread a = new Thread(new Runnable() {
@@ -182,14 +186,15 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         Socket socket;
                         socket = new Socket(ip, 8080);
-                        Log.e("hello", "6");
+//                        Log.e("hello", "6");
                         SocketUtil.socketMap.put(ip, socket);
                         PrintWriter output = new PrintWriter(socket.getOutputStream());
+                        output.write(SocketProtocol.CHAT_SOCKET+"\n");
+                        output.flush();
                         BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                         SocketReader.reader.put(ip, input);
                         SocketWriter.writer.put(ip, output);
-//                        EchoThread thread = new EchoThread(socket)
-                        new ReqResThread().run();
+                        new ReceiverThread().run();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -198,11 +203,6 @@ public class MainActivity extends AppCompatActivity {
             listThread.add(a);
             a.start();
         } else {
-            if (!resocket) {
-                top.setVisibility(View.GONE);
-                bottom.setVisibility(View.VISIBLE);
-                listView.setVisibility(View.VISIBLE);
-            }
             Thread b = new Thread(new ReceiverThread());
             listThread.add(b);
             b.start();
@@ -217,71 +217,65 @@ public class MainActivity extends AppCompatActivity {
     class ReceiverThread implements Runnable {
         @Override
         public void run() {
-            BufferedReader input = SocketReader.reader.get(ip);
             Socket socket = SocketUtil.socketMap.get(ip);
-            while (!Thread.interrupted()) {
-                try {
-                    final String message = input.readLine();
-                    if (message != null) {
-                        if (message.equals(END_CHAT)) {
-//                            onlineFriend = false;
+            try {
+                input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                final String message = input.readLine();
+                if (message != null) {
+                    switch (message) {
+                        case SocketProtocol.TEXT_MESSAGE: {
+                            final String chatMsg = input.readLine();
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    top.setVisibility(View.VISIBLE);
-                                    bottom.setVisibility(View.INVISIBLE);
-                                    listView.setVisibility(View.INVISIBLE);
+                                    User user = new User("server");
+                                    Message messageReal = new Message(chatMsg, user, false);
+                                    messagesListView.add(messageReal);
+                                    messageListViewAdapter.notifyDataSetChanged();
                                 }
                             });
-                            new ReqResThread().run();
+                            new ReceiverThread().run();
                             break;
                         }
-                        if (message.equals(SEND_FILE)) {
-                            String root = Environment.getExternalStorageDirectory().toString();
+                        case SocketProtocol.FILE_MESSAGE: {
                             final String fileName = input.readLine();
-                            PrintWriter output = SocketWriter.writer.get(ip);
-                            DataInputStream dis = new DataInputStream(socket.getInputStream());
-                            FileOutputStream fos = new FileOutputStream(root + fileName);
-                            byte[] buffer = new byte[4069];
-                            int filesize = 15123;
-                            int read = 0;
-                            int remaining = filesize;
-                            while ((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
-                                remaining -= read;
-                                fos.write(buffer, 0, read);
-                            }
-                            fos.close();
-                            dis.close();
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     User user = new User("server");
-                                    Message messageReal = new Message(fileName, user, false);
+                                    Message messageReal = new Message("received file:"+fileName, user, false);
                                     messagesListView.add(messageReal);
                                     messageListViewAdapter.notifyDataSetChanged();
                                 }
                             });
-                        } else {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    User user = new User("server");
-                                    Message messageReal = new Message(message, user, false);
-                                    messagesListView.add(messageReal);
-                                    messageListViewAdapter.notifyDataSetChanged();
-                                }
-                            });
+                            new ReceiverThread().run();
+                            break;
                         }
-
-
+                        case SocketProtocol.END_CHAT: {
+                            SocketUtil.socketMap.remove(ip);
+                            SocketWriter.writer.remove(ip);
+                            SocketReader.reader.remove(ip);
+                            socket.close();
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(MainActivity.this,"User out",Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            finish();
+                            break;
+                        }
+                        default: {
+                            new ReceiverThread().run();
+                        }
                     }
 
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.e("1234", "error file " + e);
             }
-
-
         }
     }
 
@@ -296,18 +290,16 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             PrintWriter output = SocketWriter.writer.get(ip);
-            output.write(message + "\n");
+            output.write(SocketProtocol.TEXT_MESSAGE + "\n");
+            output.write(message.trim() + "\n");
+
             output.flush();
-            Log.e("hello", "9");
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-//                    tvMessages.append("client: " + message + "\n");
                     etMessage.setText("");
                     User user = new User("client");
-                    Message messageReal = new Message(message, user, true);
-//                    messageArrayList.add(messageReal);
-//                    messageAdpter.notifyDataSetChanged();
+                    Message messageReal = new Message(message.trim(), user, true);
                     messagesListView.add(messageReal);
                     messageListViewAdapter.notifyDataSetChanged();
                 }
@@ -315,85 +307,43 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    class ReqResThread implements Runnable {
-        @Override
-        public void run() {
-            PrintWriter output = SocketWriter.writer.get(ip);
-            BufferedReader input = SocketReader.reader.get(ip);
-            Log.e("hello", "10");
-            output.write(REQUEST_CHAT + "\n");
-            output.flush();
-            while (true) {
-                try {
-                    String res = input.readLine();
-                    Log.e("test", res);
-                    if (res.equals(RESPONSE_CHAT)) {
-                        Log.e("test", "kaka");
-                        onlineFriend = true;
-                        Log.e("test", "keke");
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                top.setVisibility(View.GONE);
-                                bottom.setVisibility(View.VISIBLE);
-                                listView.setVisibility(View.VISIBLE);
-                            }
-                        });
-                        new ReceiverThread().run();
-                        break;
-                    }
-                } catch (IOException e) {
-//                    Log.e("123","error 5 "+e);
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
     @Override
     public void onBackPressed() {
-        backPressed = true;
-        ArrayList<UserInfo> userArr = HomeActivity.userArrayList;
-        Toast.makeText(this, onlineFriend ? "1" : "0", Toast.LENGTH_SHORT).show();
-        if (onlineFriend) {
-            for (int i = 0; i < userArr.size(); i++) {
-                UserInfo info = userArr.get(i);
-                if (info.getIp().equals(ip)) {
-                    info.setNewMessage(true);
-                    HomeActivity.userArrayList.set(i, info);
-                    break;
-                }
-            }
-        } else {
-            for (int i = 0; i < userArr.size(); i++) {
-                UserInfo info = userArr.get(i);
-                if (info.getIp().equals(ip)) {
-                    info.setNewMessage(false);
-                    HomeActivity.userArrayList.set(i, info);
-                    break;
-                }
-            }
-        }
-        for (Thread thread : listThread) {
-            thread.interrupt();
-        }
         new Thread(new Runnable() {
             @Override
             public void run() {
                 PrintWriter output = SocketWriter.writer.get(ip);
-                output.write(END_CHAT + "\n");
+                output.write(SocketProtocol.END_CHAT + "\n");
                 output.flush();
+                output.close();
+                SocketUtil.socketMap.remove(ip);
+                SocketWriter.writer.remove(ip);
+                SocketReader.reader.remove(ip);
             }
         }).start();
 
         super.onBackPressed();
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (!backPressed){
-
+    public String getFileName(Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
+                cursor.close();
+            }
         }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
     }
 }
