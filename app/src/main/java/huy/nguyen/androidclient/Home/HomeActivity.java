@@ -30,6 +30,7 @@ import huy.nguyen.androidclient.Message.MessageGroupActivity;
 import huy.nguyen.androidclient.Model.User;
 import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.R;
+import huy.nguyen.androidclient.Utilities.GroupUtil;
 import huy.nguyen.androidclient.Utilities.Interface.OnlineUserCallback;
 import huy.nguyen.androidclient.Utilities.SocketProtocol;
 import huy.nguyen.androidclient.Utilities.SocketReader;
@@ -57,6 +58,8 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        createSocket();
         listView = findViewById(R.id.lvListUserInHome);
         listViewGroup=findViewById(R.id.lvUserInGroup);
         button = findViewById(R.id.button);
@@ -79,7 +82,7 @@ public class HomeActivity extends AppCompatActivity {
                     public void run() {
                         userArrayList.clear();
                         userArrayList.addAll(onlineList);
-//                        Toast.makeText(HomeActivity.this, userArrayList.toString(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(HomeActivity.this, userArrayList.toString(), Toast.LENGTH_SHORT).show();
                         homeUserAdpter.notifyDataSetChanged();
                     }
                 });
@@ -98,7 +101,7 @@ public class HomeActivity extends AppCompatActivity {
         });
 
         initMyServerSocket();
-        initGroupSocket();
+//        initGroupSocket();
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -109,40 +112,46 @@ public class HomeActivity extends AppCompatActivity {
         btnCreateGroup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final Socket socket=SocketUtil.getSocket();
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            PrintWriter output=new PrintWriter(socket.getOutputStream());
-                            output.write("JOIN_TO_GROUP"+"\n");
-                            output.write(SocketUtil.getMyIp()+"\n");
-                            output.flush();
-                            Log.e("123","btnCreateCLick");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }).start();
                 Intent intent=new Intent(HomeActivity.this, MessageGroupActivity.class);
                 startActivity(intent);
             }
         });
     }
 
-    private void initGroupSocket() {
-        final Socket socket=SocketUtil.getSocket();
+    private void createSocket() {
+
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
+                    Socket socket = new Socket("192.168.43.62", 8080);
+                    GroupUtil.setSocket(socket);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    private void initGroupSocket() {
+
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Socket socket = GroupUtil.getSocket();
+                    PrintWriter output=new PrintWriter(socket.getOutputStream());
+                    output.write("GROUP_ACTION"+"\n");
+                    output.flush();
                     BufferedReader input=new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     while (true){
                         String msg=input.readLine();
+                        Log.e("123",msg);
                         if(msg.equals("NOTIFY_JOIN_TO_GROUP")){
-                            Log.e("123","NOTIFY_JOIN_TO_GROUP");
                             String temp;
 //                            Log.e("123 temp", temp );
+                            listUserInGroup.clear();
                             while (!(temp=input.readLine()).equals("END_NOTIFY_JOIN_TO_GROUP")){
                                 if(temp!=null){
                                     String[] temp1=temp.split("[:]");
@@ -152,6 +161,7 @@ public class HomeActivity extends AppCompatActivity {
                                         runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
+
                                                 listUserInGroup.add(user);
                                                 groupUserAdapter.notifyDataSetChanged();
                                             }
@@ -159,7 +169,7 @@ public class HomeActivity extends AppCompatActivity {
                                     }
                                 }
                             }
-                            break;
+//                            break;
                         }
                     }
                 } catch (IOException e) {
