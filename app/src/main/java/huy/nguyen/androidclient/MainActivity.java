@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.View;
@@ -25,11 +26,15 @@ import androidx.core.content.ContextCompat;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Random;
@@ -53,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     String accountname;
     BufferedReader input;
     Random random = new Random();
+    AlertDialog callDialog;
     static String LOG_TAG = "1234";
     static int PORT_1;
     static int PORT_2 = 10001;
@@ -63,11 +69,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String REQUEST_CHAT = "REQUEST_CHAT";
     private static final String RESPONSE_CHAT = "RESPONSE_CHAT";
-
-    private static final int SAMPLE_RATE = 8000; // Hertz
-    private static final int SAMPLE_INTERVAL = 20; // Milliseconds
-    private static final int SAMPLE_SIZE = 2; // Bytes
-    private static final int BUF_SIZE = SAMPLE_INTERVAL * SAMPLE_INTERVAL * SAMPLE_SIZE * 2; //Bytes
 
     private static final String END_CHAT = "END_CHAT";
     private static final String SEND_FILE = "SEND_FILE";
@@ -93,6 +94,8 @@ public class MainActivity extends AppCompatActivity {
         addControls();
 
         initSocket();
+
+        initCallDialog();
 
         int permissionCheck1 = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         int permission2 = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
@@ -131,7 +134,16 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void initCallDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("Confirm");
+        builder.setCancelable(false);
+        builder.setMessage("Đợi phải hồi !!!");
+        callDialog = builder.create();
+    }
+
     private void requestCall() {
+        callDialog.show();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -177,17 +189,18 @@ public class MainActivity extends AppCompatActivity {
                         chatWriter.flush();
                         FileInputStream stream = (FileInputStream) getContentResolver().openInputStream(uri);
                         DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-                        byte[] myBuffer = new byte[4069];
-//                        while (stream.read(myBuffer) > 0) {
-//                            dos.write(myBuffer);
-//                        }
+                        dos.writeUTF(123+"\n");
+                        dos.flush();
+                        byte[] myBuffer = new byte[1024];
                         int count;
-                        while ((count = stream.read(myBuffer)) > 0)
-                        {
-                            dos.write(myBuffer, 0, count);
+                        while ((count=stream.read(myBuffer)) >= 0) {
+//                            dos.write(myBuffer);
+                            dos.write(myBuffer);
+//                            Log.e("1234", count+"" );
                         }
+//                        Log.e("1234", count+"" );
                         stream.close();
-//                        dos.close();
+                        dos.close();
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -197,6 +210,7 @@ public class MainActivity extends AppCompatActivity {
                                 messageListViewAdapter.notifyDataSetChanged();
                             }
                         });
+                        return;
                     } catch (Exception e) {
                         Log.e("1234", "error in sending " + e.toString());
                     }
@@ -209,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
     private void initSocket() {
         Intent intent = getIntent();
         ip = intent.getStringExtra("PeerIp");
+        accountname = intent.getStringExtra("AccountName");
         final Map<String, Socket> socketMap = SocketUtil.socketMap;
         if (!socketMap.containsKey(ip)) {
             Thread a = new Thread(new Runnable() {
@@ -339,6 +354,7 @@ public class MainActivity extends AppCompatActivity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    callDialog.dismiss();
                                     Toast.makeText(MainActivity.this, "User deny", Toast.LENGTH_SHORT).show();
                                 }
                             });
@@ -350,6 +366,7 @@ public class MainActivity extends AppCompatActivity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    callDialog.dismiss();
                                     Intent intent = new Intent(MainActivity.this, CallActivity.class);
                                     intent.putExtra("MyPort",PORT_1);
                                     intent.putExtra("FriendPort",Integer.parseInt(friendPort));
@@ -357,6 +374,8 @@ public class MainActivity extends AppCompatActivity {
                                     startActivity(intent);
                                 }
                             });
+                            new ReceiverThread().run();
+                            break;
                         }
                         case SocketProtocol.END_CHAT: {
                             SocketUtil.socketMap.remove(ip);

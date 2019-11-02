@@ -56,7 +56,7 @@ public class MessageGroupActivity extends AppCompatActivity {
                             PrintWriter output=new PrintWriter(socket.getOutputStream());
                             output.write("MESSAGE_IN_GROUP"+"\n");
                             output.write(mes+"\n");
-                            output.write(SocketUtil.getMyIp()+"\n");
+//                            output.write(SocketUtil.getMyIp()+"\n");
                             output.flush();
                             runOnUiThread(new Runnable() {
                                 @Override
@@ -107,7 +107,7 @@ public class MessageGroupActivity extends AppCompatActivity {
                     output.write("GROUP_ACTION"+"\n");
                     output.flush();
                     output.write("JOIN_TO_GROUP"+"\n");
-                    output.write(SocketUtil.getMyIp()+"\n");
+//                    output.write(SocketUtil.getMyIp()+"\n");
                     output.flush();
                     output.write("REQ_TO_GET_MESSAGE"+"\n");
                     output.flush();
