@@ -24,6 +24,7 @@ import java.nio.ByteOrder;
 import huy.nguyen.androidclient.Home.HomeActivity;
 import huy.nguyen.androidclient.R;
 import huy.nguyen.androidclient.Utilities.Interface.LoginCallback;
+import huy.nguyen.androidclient.Utilities.SocketProtocol;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
 
 public class LoginActivity extends AppCompatActivity {
@@ -169,7 +170,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Socket socket = new Socket(IP, 8080);
+                    Socket socket = new Socket(SocketProtocol.IP_SOCKET_SERVER, 8080);
                     SocketUtil.setSocket(socket);
                     SocketUtil.initSetup();
                 } catch (IOException e) {

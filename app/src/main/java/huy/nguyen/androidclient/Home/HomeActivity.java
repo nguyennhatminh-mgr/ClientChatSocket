@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -12,6 +13,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -55,23 +58,25 @@ public class HomeActivity extends AppCompatActivity {
     ListView listViewGroup;
     HomeUserAdpter homeUserAdpter;
     ListView listView;
-    Button button,button2;
-    Button btnCreateGroup;
+    ImageView btnJoinToGroup,btnLogout;
     ServerSocket serverSocket;
     Thread Thread1 = null;
-
+    ImageView imgAvatarHome;
+    EditText edtAccountName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-//        createSocket();
+
         listView = findViewById(R.id.lvListUserInHome);
         listViewGroup=findViewById(R.id.lvUserInGroup);
-        button = findViewById(R.id.button);
-        button2 = findViewById(R.id.button2);
-        btnCreateGroup = findViewById(R.id.btnCreateGroup);
+        btnJoinToGroup = findViewById(R.id.btnJoinToGroup);
+        btnLogout = findViewById(R.id.btnLogOut);
+        imgAvatarHome=findViewById(R.id.imgAvatarHome);
+        edtAccountName=findViewById(R.id.edtAccountNameHome);
+
         userArrayList = new ArrayList<>();
         homeUserAdpter = new HomeUserAdpter(HomeActivity.this, userArrayList);
         listView.setAdapter(homeUserAdpter);
@@ -96,88 +101,29 @@ public class HomeActivity extends AppCompatActivity {
 
         initMyServerSocket();
 //        initGroupSocket();
-        button.setOnClickListener(new View.OnClickListener() {
+        btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 doLogOut();
             }
         });
 
-        btnCreateGroup.setOnClickListener(new View.OnClickListener() {
+        btnJoinToGroup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent=new Intent(HomeActivity.this, MessageGroupActivity.class);
                 startActivity(intent);
             }
         });
-        button2.setOnClickListener(new View.OnClickListener() {
+
+        imgAvatarHome.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                uploadImage();
+
             }
         });
     }
 
-    private void createSocket() {
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Socket socket = new Socket("192.168.43.62", 8080);
-                    GroupUtil.setSocket(socket);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-    }
-
-    private void initGroupSocket() {
-
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Socket socket = GroupUtil.getSocket();
-                    PrintWriter output=new PrintWriter(socket.getOutputStream());
-                    output.write("GROUP_ACTION"+"\n");
-                    output.flush();
-                    BufferedReader input=new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    while (true){
-                        String msg=input.readLine();
-                        Log.e("123",msg);
-                        if(msg.equals("NOTIFY_JOIN_TO_GROUP")){
-                            String temp;
-//                            Log.e("123 temp", temp );
-                            listUserInGroup.clear();
-                            while (!(temp=input.readLine()).equals("END_NOTIFY_JOIN_TO_GROUP")){
-                                if(temp!=null){
-                                    String[] temp1=temp.split("[:]");
-                                    if(temp1.length==2){
-                                        final UserInfo user=new UserInfo(temp1[0],temp1[1]);
-//                            Log.e("123",temp1.toString());
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-
-                                                listUserInGroup.add(user);
-                                                groupUserAdapter.notifyDataSetChanged();
-                                            }
-                                        });
-                                    }
-                                }
-                            }
-//                            break;
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-    }
 
     private void initSetup() {
         new Thread(new Runnable() {
@@ -235,63 +181,6 @@ public class HomeActivity extends AppCompatActivity {
         }).start();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
-                && data != null && data.getData() != null) {
-            final Uri uri = data.getData();
-
-//            final String fileName = SocketUtil.getMyAccount().getUsername()+".jpeg";
-            final String fileName = getFileName(uri);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Socket socket = new Socket(SocketUtil.getServerIp(), 8080);
-                        PrintWriter fileWriter = new PrintWriter(socket.getOutputStream());
-                        fileWriter.write(SocketProtocol.UPDATE_IMAGE + "\n");
-                        fileWriter.flush();
-                        fileWriter.write(fileName + "\n");
-                        Log.e("1234", "filename " + fileName);
-                        fileWriter.flush();
-                        FileInputStream stream = (FileInputStream) getContentResolver().openInputStream(uri);
-                        DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-                        dos.write(123);
-                        byte[] myBuffer = new byte[1024];
-                        while (stream.read(myBuffer) >= 0) {
-                            dos.write(myBuffer);
-                        }
-//                        int count;
-//                        while ((count = stream.read(myBuffer)) > 0)
-//                        {
-//                            dos.write(myBuffer, 0, count);
-//                        }
-                        Log.e("1234","finish");
-                        stream.close();
-
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-
-                            }
-                        });
-                    } catch (Exception e) {
-                        Log.e("1234", "error in sending " + e.toString());
-                    }
-
-                }
-            }).start();
-        }
-    }
-
-    private void uploadImage() {
-        Intent intent = new Intent();
-        intent.setType("*/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
-    }
-
     private void initMyServerSocket() {
         Thread1 = new Thread(new Thread1());
         Thread1.start();
@@ -335,7 +224,7 @@ public class HomeActivity extends AppCompatActivity {
                             File file = new File(Environment.getExternalStorageDirectory(), fileName);
                             DataInputStream dis = new DataInputStream(socket.getInputStream());
                             FileOutputStream fos = new FileOutputStream(file);
-                            String a = dis.readUTF();
+//                            String a = dis.readUTF();
                             byte[] buffer = new byte[1024];
                             int read;
                             while ((read = dis.read(buffer)) >= 0) {

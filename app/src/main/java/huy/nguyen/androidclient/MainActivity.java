@@ -189,8 +189,8 @@ public class MainActivity extends AppCompatActivity {
                         chatWriter.flush();
                         FileInputStream stream = (FileInputStream) getContentResolver().openInputStream(uri);
                         DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-                        dos.writeUTF(123+"\n");
-                        dos.flush();
+//                        dos.writeUTF(123+"\n");
+//                        dos.flush();
                         byte[] myBuffer = new byte[1024];
                         int count;
                         while ((count=stream.read(myBuffer)) >= 0) {
@@ -198,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
                             dos.write(myBuffer);
 //                            Log.e("1234", count+"" );
                         }
-//                        Log.e("1234", count+"" );
+                        Log.e("1234", count+"" );
                         stream.close();
                         dos.close();
                         runOnUiThread(new Runnable() {
