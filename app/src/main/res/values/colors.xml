@@ -6,4 +6,5 @@
     <color name="backgroundMessage">#4267b2</color>
     <color name="textLoginColor">#FFFFFF</color>
     <color name="textColor">#000000</color>
+    <color name="backgroundIconHome">#ECE8E8</color>
 </resources>

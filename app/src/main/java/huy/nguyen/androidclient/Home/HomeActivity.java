@@ -3,6 +3,7 @@ package huy.nguyen.androidclient.Home;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -10,6 +11,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -51,23 +54,25 @@ public class HomeActivity extends AppCompatActivity {
     ListView listViewGroup;
     HomeUserAdpter homeUserAdpter;
     ListView listView;
-    Button button,button2;
-    Button btnCreateGroup;
+    ImageView btnJoinToGroup,btnLogout;
     ServerSocket serverSocket;
     Thread Thread1 = null;
-
+    ImageView imgAvatarHome;
+    EditText edtAccountName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        createSocket();
+
         listView = findViewById(R.id.lvListUserInHome);
         listViewGroup=findViewById(R.id.lvUserInGroup);
-        button = findViewById(R.id.button);
-        button2 = findViewById(R.id.button2);
-        btnCreateGroup = findViewById(R.id.btnCreateGroup);
+        btnJoinToGroup = findViewById(R.id.btnJoinToGroup);
+        btnLogout = findViewById(R.id.btnLogOut);
+        imgAvatarHome=findViewById(R.id.imgAvatarHome);
+        edtAccountName=findViewById(R.id.edtAccountNameHome);
+
         userArrayList = new ArrayList<>();
         homeUserAdpter = new HomeUserAdpter(HomeActivity.this, userArrayList);
         listView.setAdapter(homeUserAdpter);
@@ -92,36 +97,29 @@ public class HomeActivity extends AppCompatActivity {
 
         initMyServerSocket();
 //        initGroupSocket();
-        button.setOnClickListener(new View.OnClickListener() {
+        btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 doLogOut();
             }
         });
 
-        btnCreateGroup.setOnClickListener(new View.OnClickListener() {
+        btnJoinToGroup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent=new Intent(HomeActivity.this, MessageGroupActivity.class);
                 startActivity(intent);
             }
         });
-    }
 
-    private void createSocket() {
-
-        new Thread(new Runnable() {
+        imgAvatarHome.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void run() {
-                try {
-                    Socket socket = new Socket("192.168.43.62", 8080);
-                    GroupUtil.setSocket(socket);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            public void onClick(View v) {
+                uploadImage();
             }
-        }).start();
+        });
     }
+
 
     private void initGroupSocket() {
 
@@ -167,12 +165,7 @@ public class HomeActivity extends AppCompatActivity {
                 }
             }
         }).start();
-        button2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                uploadImage();
-            }
-        });
+
     }
 
     private void initSetup() {

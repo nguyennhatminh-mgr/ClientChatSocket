@@ -1,6 +1,8 @@
 package huy.nguyen.androidclient.Message;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.view.View;
@@ -21,6 +23,7 @@ import huy.nguyen.androidclient.Model.User;
 import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.R;
 import huy.nguyen.androidclient.Utilities.GroupUtil;
+import huy.nguyen.androidclient.Utilities.SocketProtocol;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
 
 public class MessageGroupActivity extends AppCompatActivity {
@@ -32,14 +35,25 @@ public class MessageGroupActivity extends AppCompatActivity {
     ArrayList<Message> listMessage;
     MessageListViewAdapter listMessageAdapter;
 
+    RecyclerView rcvUserInGroup;
+    ArrayList<String> listAccountName;
+    GroupUserAdapter groupUserAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message_group);
+
+
         addControls();
         listMessage=new ArrayList<>();
         listMessageAdapter=new MessageListViewAdapter(MessageGroupActivity.this,listMessage);
         lvGroupMessage.setAdapter(listMessageAdapter);
+
+        listAccountName=new ArrayList<>();
+        groupUserAdapter=new GroupUserAdapter(MessageGroupActivity.this,listAccountName);
+        rcvUserInGroup.setAdapter(groupUserAdapter);
+        rcvUserInGroup.setLayoutManager(new LinearLayoutManager(MessageGroupActivity.this,LinearLayoutManager.HORIZONTAL,false));
 
         initGroupSocket();
 //        requestToServer();
@@ -54,9 +68,9 @@ public class MessageGroupActivity extends AppCompatActivity {
                     public void run() {
                         try {
                             PrintWriter output=new PrintWriter(socket.getOutputStream());
-                            output.write("MESSAGE_IN_GROUP"+"\n");
+                            output.write(SocketProtocol.MESSAGE_IN_GROUP+"\n");
                             output.write(mes+"\n");
-                            output.write(SocketUtil.getMyIp()+"\n");
+//                            output.write(SocketUtil.getMyIp()+"\n");
                             output.flush();
                             runOnUiThread(new Runnable() {
                                 @Override
@@ -78,6 +92,22 @@ public class MessageGroupActivity extends AppCompatActivity {
         });
     }
 
+    private void createSocket() {
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Socket socket = new Socket("192.168.137.1", 8080);
+                    GroupUtil.setSocket(socket);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+
     private void requestToServer() {
         final Socket socket= GroupUtil.getSocket();
         new Thread(new Runnable() {
@@ -97,26 +127,29 @@ public class MessageGroupActivity extends AppCompatActivity {
     }
 
     private void initGroupSocket() {
-        final Socket socket=GroupUtil.getSocket();
+//        final Socket socket=GroupUtil.getSocket();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
+                    Socket socket = new Socket(SocketProtocol.IP_SOCKET_SERVER, 8080);
+                    GroupUtil.setSocket(socket);
                     BufferedReader input=new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     PrintWriter output=new PrintWriter(socket.getOutputStream());
-                    output.write("GROUP_ACTION"+"\n");
+                    output.write(SocketProtocol.GROUP_ACTION+"\n");
                     output.flush();
-                    output.write("JOIN_TO_GROUP"+"\n");
-                    output.write(SocketUtil.getMyIp()+"\n");
+                    output.write(SocketProtocol.JOIN_TO_GROUP+"\n");
+//                    output.write(SocketUtil.getMyIp()+"\n");
                     output.flush();
-                    output.write("REQ_TO_GET_MESSAGE"+"\n");
+                    output.write(SocketProtocol.REQ_TO_GET_MESSAGE+"\n");
                     output.flush();
                     while (true){
                         String nofityGroup=input.readLine();
-                        if(nofityGroup.equals("NOTIFY_JOIN_TO_GROUP")){
+                        if(nofityGroup.equals(SocketProtocol.NOTIFY_JOIN_TO_GROUP)){
                             String temp;
 //                            Log.e("123 temp", temp );
-                            while (!(temp=input.readLine()).equals("END_NOTIFY_JOIN_TO_GROUP")){
+                            listAccountName.clear();
+                            while (!(temp=input.readLine()).equals(SocketProtocol.END_NOTIFY_JOIN_TO_GROUP)){
                                 if(temp!=null){
                                     String[] temp1=temp.split("[:]");
                                     if(temp1.length==2){
@@ -125,9 +158,9 @@ public class MessageGroupActivity extends AppCompatActivity {
                                         runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                Toast.makeText(MessageGroupActivity.this,"Add"+user.getAccountname(),Toast.LENGTH_SHORT).show();
-//                                                listUserInGroup.add(user);
-//                                                groupUserAdapter.notifyDataSetChanged();
+                                                Toast.makeText(MessageGroupActivity.this,"Add "+user.getAccountname(),Toast.LENGTH_SHORT).show();
+                                                listAccountName.add(user.getAccountname());
+                                                groupUserAdapter.notifyDataSetChanged();
                                             }
                                         });
                                     }
@@ -135,14 +168,14 @@ public class MessageGroupActivity extends AppCompatActivity {
                             }
 
                         }
-                        else if(nofityGroup.equals("MESSAGE_RESPONE_IN_GROUP")){
+                        else if(nofityGroup.equals(SocketProtocol.MESSAGE_RESPONE_IN_GROUP)){
 //                            listMessage.clear();
                             String msg;
-                            while (!(msg=input.readLine()).equals("END_MESSAGE_RESPONE_IN_GROUP")){
+                            while (!(msg=input.readLine()).equals(SocketProtocol.END_MESSAGE_RESPONE_IN_GROUP)){
                                 String username = msg;
                                 String message = input.readLine();
                                 User user = new User("server");
-                                final Message messageReal = new Message(username+" send "+message, user, false);
+                                final Message messageReal = new Message(username+" send: "+message, user, false);
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -153,9 +186,9 @@ public class MessageGroupActivity extends AppCompatActivity {
                             }
 
                         }
-                        else if(nofityGroup.equals("MESSAGE_SINGLE_RESPONE_IN_GROUP")){
+                        else if(nofityGroup.equals(SocketProtocol.MESSAGE_SINGLE_RESPONE_IN_GROUP)){
                             String msg;
-                            while (!(msg=input.readLine()).equals("END_MESSAGE_SINGLE_RESPONE_IN_GROUP")){
+                            while (!(msg=input.readLine()).equals(SocketProtocol.END_MESSAGE_SINGLE_RESPONE_IN_GROUP)){
                                 String username = msg;
                                 String message = input.readLine();
                                 User user = new User("server");
@@ -207,5 +240,25 @@ public class MessageGroupActivity extends AppCompatActivity {
         btnGroupFileUpLoad=findViewById(R.id.btnGroupFileUpLoad);
         btnGroupSend=findViewById(R.id.btnGroupSend);
         edtGroupMessage=findViewById(R.id.edtGroupMessage);
+        rcvUserInGroup=findViewById(R.id.rcvUserInGroup);
+    }
+
+    @Override
+    public void onBackPressed() {
+        final Socket socket=GroupUtil.getSocket();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    PrintWriter output=new PrintWriter(socket.getOutputStream());
+                    output.write(SocketProtocol.OUT_GROUP+"\n");
+                    output.flush();
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+        super.onBackPressed();
     }
 }
