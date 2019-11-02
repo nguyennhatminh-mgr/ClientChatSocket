@@ -1,10 +1,7 @@
 package huy.nguyen.androidclient.Home;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.database.Cursor;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -12,20 +9,18 @@ import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.io.BufferedReader;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -33,20 +28,14 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import huy.nguyen.androidclient.MainActivity;
-import huy.nguyen.androidclient.Model.Message;
-import huy.nguyen.androidclient.Model.User;
 import huy.nguyen.androidclient.Message.MessageGroupActivity;
-import huy.nguyen.androidclient.Model.User;
 import huy.nguyen.androidclient.Model.UserAccount;
 import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.R;
-import huy.nguyen.androidclient.Utilities.GroupUtil;
-import huy.nguyen.androidclient.Utilities.Interface.OnlineUserCallback;
 import huy.nguyen.androidclient.Utilities.SocketProtocol;
 import huy.nguyen.androidclient.Utilities.SocketReader;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
 import huy.nguyen.androidclient.Utilities.SocketWriter;
-import huy.nguyen.androidclient.Utilities.ThreadManager;
 
 import static huy.nguyen.androidclient.Utilities.SocketUtil.socketMap;
 

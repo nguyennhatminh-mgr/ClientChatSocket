@@ -1,15 +1,15 @@
 package huy.nguyen.androidclient.Message;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,7 +24,6 @@ import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.R;
 import huy.nguyen.androidclient.Utilities.GroupUtil;
 import huy.nguyen.androidclient.Utilities.SocketProtocol;
-import huy.nguyen.androidclient.Utilities.SocketUtil;
 
 public class MessageGroupActivity extends AppCompatActivity {
 

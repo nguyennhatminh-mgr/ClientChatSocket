@@ -1,7 +1,5 @@
 package huy.nguyen.androidclient.Authentication;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -11,6 +9,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import huy.nguyen.androidclient.R;
 import huy.nguyen.androidclient.Utilities.Interface.SignupCallback;

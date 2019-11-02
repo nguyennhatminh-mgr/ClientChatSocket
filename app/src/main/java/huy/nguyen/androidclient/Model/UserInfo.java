@@ -1,7 +1,5 @@
 package huy.nguyen.androidclient.Model;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import java.io.Serializable;
