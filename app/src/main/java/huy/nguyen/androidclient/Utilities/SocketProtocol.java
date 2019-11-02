@@ -3,7 +3,10 @@ package huy.nguyen.androidclient.Utilities;
 public class SocketProtocol {
     public static final String REQUEST_CHAT = "REQUEST_CHAT";
     public static final String RESPONSE_CHAT = "RESPONSE_CHAT";
-
+    public static final String GET_PERSONAL_INFO = "GET_PERSONAL_INFO";
+    public static final String VALID_USER = "VALID_USER";
+    public static final String INVALID_USER = "INVALID_USER";
+    public static final String UPDATE_IMAGE = "UPDATE_IMAGE";
 
     public static final String LOGIN_ACTION = "LOGIN";
     public static final String SIGNUP_ACTION = "SIGNUP";
@@ -47,7 +50,7 @@ public class SocketProtocol {
     public static final String OUT_GROUP = "OUT_GROUP";
 
 
-    public static final String IP_SOCKET_SERVER = "192.168.137.1";
+    public static final String IP_SOCKET_SERVER = "192.168.43.62";
 
 
 }

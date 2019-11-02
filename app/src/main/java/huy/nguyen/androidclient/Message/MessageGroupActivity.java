@@ -107,7 +107,6 @@ public class MessageGroupActivity extends AppCompatActivity {
         }).start();
     }
 
-
     private void requestToServer() {
         final Socket socket= GroupUtil.getSocket();
         new Thread(new Runnable() {

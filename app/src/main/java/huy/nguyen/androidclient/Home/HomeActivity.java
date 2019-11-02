@@ -3,10 +3,12 @@ package huy.nguyen.androidclient.Home;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -23,6 +25,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -34,6 +37,7 @@ import huy.nguyen.androidclient.Model.Message;
 import huy.nguyen.androidclient.Model.User;
 import huy.nguyen.androidclient.Message.MessageGroupActivity;
 import huy.nguyen.androidclient.Model.User;
+import huy.nguyen.androidclient.Model.UserAccount;
 import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.R;
 import huy.nguyen.androidclient.Utilities.GroupUtil;
@@ -115,67 +119,35 @@ public class HomeActivity extends AppCompatActivity {
         imgAvatarHome.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                uploadImage();
+
             }
         });
     }
 
-
-    private void initGroupSocket() {
-
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Socket socket = GroupUtil.getSocket();
-                    PrintWriter output=new PrintWriter(socket.getOutputStream());
-                    output.write("GROUP_ACTION"+"\n");
-                    output.flush();
-                    BufferedReader input=new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    while (true){
-                        String msg=input.readLine();
-                        Log.e("123",msg);
-                        if(msg.equals("NOTIFY_JOIN_TO_GROUP")){
-                            String temp;
-//                            Log.e("123 temp", temp );
-                            listUserInGroup.clear();
-                            while (!(temp=input.readLine()).equals("END_NOTIFY_JOIN_TO_GROUP")){
-                                if(temp!=null){
-                                    String[] temp1=temp.split("[:]");
-                                    if(temp1.length==2){
-                                        final UserInfo user=new UserInfo(temp1[0],temp1[1]);
-//                            Log.e("123",temp1.toString());
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-
-                                                listUserInGroup.add(user);
-                                                groupUserAdapter.notifyDataSetChanged();
-                                            }
-                                        });
-                                    }
-                                }
-                            }
-//                            break;
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-
-    }
 
     private void initSetup() {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 PrintWriter output = SocketUtil.writer;
+                BufferedReader input = SocketUtil.reader;
+                output.write(SocketProtocol.GET_PERSONAL_INFO+"\n");
+                output.flush();
+                try {
+                    String status = input.readLine();
+                    if (status.equals(SocketProtocol.INVALID_USER)){
+                        Log.e("1234", "INVALID" );
+                    } else if(status.equals(SocketProtocol.VALID_USER)){
+                        String accountname = input.readLine();
+                        String username = input.readLine();
+                        String ip = input.readLine();
+                        SocketUtil.setMyAccount(new UserAccount(username,accountname,ip));
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 output.write(SocketProtocol.REQUEST_ONLINE+"\n");
                 output.flush();
-                BufferedReader input = SocketUtil.reader;
                 while (true) {
                     try {
                         String code = input.readLine();
@@ -207,63 +179,6 @@ public class HomeActivity extends AppCompatActivity {
                 }
             }
         }).start();
-    }
-
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
-//                && data != null && data.getData() != null) {
-//            final Uri uri = data.getData();
-//
-//            final String fileName = getFileName(uri);
-//
-//            new Thread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    try {
-//                        Socket socket = new Socket(ip, 8080);
-//                        PrintWriter fileWriter = new PrintWriter(socket.getOutputStream());
-//                        fileWriter.write(SocketProtocol.FILE_SOCKET + "\n");
-//                        fileWriter.flush();
-//                        fileWriter.write(fileName + "\n");
-//                        Log.e("1234", "filename " + fileName);
-//                        fileWriter.flush();
-//                        PrintWriter chatWriter = SocketWriter.writer.get(ip);
-//                        chatWriter.write(SocketProtocol.FILE_MESSAGE + "\n");
-//                        chatWriter.write(fileName + "\n");
-//                        chatWriter.flush();
-//                        FileInputStream stream = (FileInputStream) getContentResolver().openInputStream(uri);
-//                        DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-//                        byte[] myBuffer = new byte[4069];
-//                        while (stream.read(myBuffer) > 0) {
-//                            dos.write(myBuffer);
-//                        }
-//                        stream.close();
-////                        dos.close();
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                User user = new User("server");
-//                                Message messageReal = new Message(fileName, user, true);
-//                                messagesListView.add(messageReal);
-//                                messageListViewAdapter.notifyDataSetChanged();
-//                            }
-//                        });
-//                    } catch (Exception e) {
-//                        Log.e("1234", "error in sending " + e.toString());
-//                    }
-//
-//                }
-//            }).start();
-//        }
-//    }
-
-    private void uploadImage() {
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
     }
 
     private void initMyServerSocket() {
@@ -309,14 +224,22 @@ public class HomeActivity extends AppCompatActivity {
                             File file = new File(Environment.getExternalStorageDirectory(), fileName);
                             DataInputStream dis = new DataInputStream(socket.getInputStream());
                             FileOutputStream fos = new FileOutputStream(file);
-                            byte[] buffer = new byte[4069];
+//                            String a = dis.readUTF();
+                            byte[] buffer = new byte[1024];
                             int read;
-                            Log.e("1234", "get there" );
-                            while ((read = dis.read(buffer)) > 0) {
+                            while ((read = dis.read(buffer)) >= 0) {
                                 fos.write(buffer, 0, read);
                             }
+                            Log.e("1234", read+"" );
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(HomeActivity.this,"saved at :"+Environment.getExternalStorageDirectory().toString()+fileName,Toast.LENGTH_SHORT).show();
+                                }
+                            });
                             fos.close();
-//                            dis.close();
+                            dis.close();
+                            socket.close();
                         } catch (Exception e) {
                             Log.e("1234", "test " + e.toString());
                         }
@@ -348,5 +271,27 @@ public class HomeActivity extends AppCompatActivity {
             }
         }).start();
         finish();
+    }
+
+    public String getFileName(Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
     }
 }

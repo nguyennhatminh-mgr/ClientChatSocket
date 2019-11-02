@@ -34,6 +34,8 @@ public class CallActivity extends AppCompatActivity {
     boolean speakers = true;
     DatagramSocket callSocket;
     DatagramSocket receiverSocket;
+    AudioRecord audioRecorder;
+    AudioTrack track;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +61,7 @@ public class CallActivity extends AppCompatActivity {
             public void onClick(View v) {
                 call = false;
                 speakers = false;
+                finish();
             }
         });
     }
@@ -67,7 +70,7 @@ public class CallActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                AudioRecord audioRecorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION, SAMPLE_RATE,
+                audioRecorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION, SAMPLE_RATE,
                         AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
                         AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT) * 10);
                 int bytes_read;
@@ -78,12 +81,11 @@ public class CallActivity extends AppCompatActivity {
                     audioRecorder.startRecording();
                     InetAddress address = InetAddress.getByName(friendIp);
                     while (call) {
-                        Log.e("1234", "get there ");
                         // Capture audio from the mic and transmit it
                         bytes_read = audioRecorder.read(buf, 0, BUF_SIZE);
                         DatagramPacket packet = new DatagramPacket(buf, bytes_read, address, MY_PORT);
                         callSocket.send(packet);
-                        Thread.sleep(SAMPLE_INTERVAL, 0);
+                        Thread.sleep(SAMPLE_INTERVAL, 10);
                     }
                     // Stop recording and release resources
                     audioRecorder.stop();
@@ -92,15 +94,25 @@ public class CallActivity extends AppCompatActivity {
                     callSocket.close();
                 } catch (InterruptedException e) {
                     call = false;
+                    speakers = false;
                     Log.e(LOG_TAG, "InterruptedException: " + e.toString());
                 } catch (SocketException e) {
                     call = false;
+                    speakers = false;
                     Log.e(LOG_TAG, "SocketException: " + e.toString());
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            finish();
+                        }
+                    });
                 } catch (UnknownHostException e) {
                     call = false;
+                    speakers = false;
                     Log.e(LOG_TAG, "UnknownHostException: " + e.toString());
                 } catch (IOException e) {
                     call = false;
+                    speakers = false;
                     Log.e(LOG_TAG, "IOException: " + e.toString());
                 }
             }
@@ -112,7 +124,7 @@ public class CallActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO,
+                track = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO,
                         AudioFormat.ENCODING_PCM_16BIT, BUF_SIZE, AudioTrack.MODE_STREAM);
                 track.play();
                 try {
@@ -133,11 +145,17 @@ public class CallActivity extends AppCompatActivity {
                     track.stop();
                     track.flush();
                     track.release();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            finish();
+                        }
+                    });
                     speakers = false;
                 } catch (SocketException e) {
+                    call = false;
                     speakers = false;
                     Log.e(LOG_TAG, "SocketException: " + e.toString());
-                    speakers = false;
                 } catch (IOException e) {
                     speakers = false;
                     Log.e(LOG_TAG, "IOException: " + e.toString());
@@ -147,4 +165,20 @@ public class CallActivity extends AppCompatActivity {
         }).start();
     }
 
+
+    @Override
+    public void onBackPressed() {
+//        audioRecorder.stop();
+//        audioRecorder.release();
+//        callSocket.disconnect();
+//        callSocket.close();
+//        receiverSocket.disconnect();
+//        receiverSocket.close();
+//        track.stop();
+//        track.flush();
+//        track.release();
+        speakers = false;
+        call = false;
+        super.onBackPressed();
+    }
 }
