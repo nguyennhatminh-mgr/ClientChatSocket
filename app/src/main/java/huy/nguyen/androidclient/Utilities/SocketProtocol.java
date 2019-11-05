@@ -66,7 +66,7 @@ public class SocketProtocol {
     public static final String OUT_GROUP = "OUT_GROUP";
 
 
-    public static final String IP_SOCKET_SERVER = "192.168.43.62";
+    public static final String IP_SOCKET_SERVER = "192.168.137.1";
 
 
 }

@@ -4,7 +4,7 @@
 
     <!--    &lt;!&ndash; View background color &ndash;&gt;-->
 <!--    <solid-->
-<!--        android:color="@color/backgroundMessage" >-->
+<!--        android:color="#1aaa1a" >-->
 <!--    </solid>-->
 
     <!-- View border color and width -->

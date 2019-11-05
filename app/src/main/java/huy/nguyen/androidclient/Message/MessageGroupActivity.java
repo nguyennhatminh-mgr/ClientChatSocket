@@ -24,6 +24,7 @@ import huy.nguyen.androidclient.Model.UserInfo;
 import huy.nguyen.androidclient.R;
 import huy.nguyen.androidclient.Utilities.GroupUtil;
 import huy.nguyen.androidclient.Utilities.SocketProtocol;
+import huy.nguyen.androidclient.Utilities.SocketUtil;
 
 public class MessageGroupActivity extends AppCompatActivity {
 
@@ -32,7 +33,7 @@ public class MessageGroupActivity extends AppCompatActivity {
     EditText edtGroupMessage;
 
     ArrayList<Message> listMessage;
-    MessageListViewAdapter listMessageAdapter;
+    MessageGroupAdapter listMessageAdapter;
 
     RecyclerView rcvUserInGroup;
     ArrayList<String> listAccountName;
@@ -46,7 +47,7 @@ public class MessageGroupActivity extends AppCompatActivity {
 
         addControls();
         listMessage=new ArrayList<>();
-        listMessageAdapter=new MessageListViewAdapter(MessageGroupActivity.this,listMessage);
+        listMessageAdapter=new MessageGroupAdapter(MessageGroupActivity.this,listMessage);
         lvGroupMessage.setAdapter(listMessageAdapter);
 
         listAccountName=new ArrayList<>();
@@ -156,7 +157,7 @@ public class MessageGroupActivity extends AppCompatActivity {
                                         runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                Toast.makeText(MessageGroupActivity.this,"Add "+user.getAccountname(),Toast.LENGTH_SHORT).show();
+//                                                Toast.makeText(MessageGroupActivity.this,"Add "+user.getAccountname(),Toast.LENGTH_SHORT).show();
                                                 listAccountName.add(user.getAccountname());
                                                 groupUserAdapter.notifyDataSetChanged();
                                             }
@@ -172,8 +173,13 @@ public class MessageGroupActivity extends AppCompatActivity {
                             while (!(msg=input.readLine()).equals(SocketProtocol.END_MESSAGE_RESPONE_IN_GROUP)){
                                 String username = msg;
                                 String message = input.readLine();
-                                User user = new User("server");
-                                final Message messageReal = new Message(username+" send: "+message, user, false);
+                                User user = new User(username);
+                                boolean isCurrentUser=false;
+                                if(username.equals(SocketUtil.getMyAccount().getAccountname())){
+                                    isCurrentUser=true;
+                                }
+
+                                final Message messageReal= new Message(message, user, isCurrentUser);
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -189,8 +195,8 @@ public class MessageGroupActivity extends AppCompatActivity {
                             while (!(msg=input.readLine()).equals(SocketProtocol.END_MESSAGE_SINGLE_RESPONE_IN_GROUP)){
                                 String username = msg;
                                 String message = input.readLine();
-                                User user = new User("server");
-                                final Message messageReal = new Message(username+" send "+message, user, false);
+                                User user = new User(username);
+                                final Message messageReal = new Message(message, user, false);
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -235,7 +241,7 @@ public class MessageGroupActivity extends AppCompatActivity {
 
     private void addControls() {
         lvGroupMessage=findViewById(R.id.lvGroupMessage);
-        btnGroupFileUpLoad=findViewById(R.id.btnGroupFileUpLoad);
+//        btnGroupFileUpLoad=findViewById(R.id.btnGroupFileUpLoad);
         btnGroupSend=findViewById(R.id.btnGroupSend);
         edtGroupMessage=findViewById(R.id.edtGroupMessage);
         rcvUserInGroup=findViewById(R.id.rcvUserInGroup);

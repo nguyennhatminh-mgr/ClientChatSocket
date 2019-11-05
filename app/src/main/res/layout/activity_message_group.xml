@@ -32,12 +32,12 @@
         android:gravity="center"
         android:layout_marginTop="10dp">
 
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            app:srcCompat="@drawable/ic_file_upload_black_24dp"
-            android:id="@+id/btnGroupFileUpLoad"
-            android:layout_weight="1"/>
+<!--        <ImageView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="match_parent"-->
+<!--            app:srcCompat="@drawable/ic_file_upload_black_24dp"-->
+<!--            android:id="@+id/btnGroupFileUpLoad"-->
+<!--            android:layout_weight="1"/>-->
         <EditText
             android:id = "@+id/edtGroupMessage"
             android:layout_width = "wrap_content"
