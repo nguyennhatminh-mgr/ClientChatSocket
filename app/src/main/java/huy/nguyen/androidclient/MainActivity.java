@@ -54,25 +54,14 @@ public class MainActivity extends AppCompatActivity {
     BufferedReader input;
     Random random = new Random();
     AlertDialog callDialog;
-    static String LOG_TAG = "1234";
     static int PORT_1;
     static int PORT_2 = 10001;
     private ArrayList<Thread> listThread = new ArrayList<>();
 
-    private boolean backPressed = false;
-    private volatile static boolean onlineFriend = false;
-
-    private static final String REQUEST_CHAT = "REQUEST_CHAT";
-    private static final String RESPONSE_CHAT = "RESPONSE_CHAT";
-
-    private static final String END_CHAT = "END_CHAT";
-    private static final String SEND_FILE = "SEND_FILE";
     ArrayList<Message> messagesListView;
     ListView listView;
     public static MessageListViewAdapter messageListViewAdapter;
 
-    private boolean speakers = true; // Enable speakers?
-    private boolean call = true; // Enable speakers?
 
 
     @Override
@@ -133,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle("Confirm");
         builder.setCancelable(false);
-        builder.setMessage("Đợi phải hồi !!!");
+        builder.setMessage("Đợi phản hồi !!!");
         callDialog = builder.create();
     }
 
@@ -184,14 +173,10 @@ public class MainActivity extends AppCompatActivity {
                         chatWriter.flush();
                         FileInputStream stream = (FileInputStream) getContentResolver().openInputStream(uri);
                         DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-//                        dos.writeUTF(123+"\n");
-//                        dos.flush();
                         byte[] myBuffer = new byte[1024];
                         int count;
                         while ((count=stream.read(myBuffer)) >= 0) {
-//                            dos.write(myBuffer);
                             dos.write(myBuffer);
-//                            Log.e("1234", count+"" );
                         }
                         Log.e("1234", count+"" );
                         stream.close();
@@ -227,7 +212,6 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         Socket socket;
                         socket = new Socket(ip, 8080);
-//                        Log.e("hello", "6");
                         SocketUtil.socketMap.put(ip, socket);
                         PrintWriter output = new PrintWriter(socket.getOutputStream());
                         output.write(SocketProtocol.CHAT_SOCKET + "\n");

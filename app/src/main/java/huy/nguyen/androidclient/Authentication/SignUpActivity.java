@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import huy.nguyen.androidclient.R;
 import huy.nguyen.androidclient.Utilities.Interface.SignupCallback;
+import huy.nguyen.androidclient.Utilities.SocketProtocol;
 import huy.nguyen.androidclient.Utilities.SocketUtil;
 
 public class SignUpActivity extends AppCompatActivity {
@@ -47,14 +48,14 @@ public class SignUpActivity extends AppCompatActivity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    if (result.equals("SIGNUP_SUCCESS")) {
+                                    if (result.equals(SocketProtocol.SIGNUP_SUCCESS)) {
                                         Toast.makeText(SignUpActivity.this, result, Toast.LENGTH_SHORT).show();
                                         Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
                                         intent.putExtra("username",edtUsername.getText().toString());
                                         intent.putExtra("password",edtPassword.getText().toString());
                                         startActivity(intent);
                                         finish();
-                                    } else if (result.equals("SIGNUP_FAIL_USERNAME")) {
+                                    } else if (result.equals(SocketProtocol.SIGNUP_FAIL_USERNAME)) {
                                         edtUsername.setError("User name is exist");
                                     }
                                 }

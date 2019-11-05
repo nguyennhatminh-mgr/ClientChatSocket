@@ -168,15 +168,6 @@ public class CallActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-//        audioRecorder.stop();
-//        audioRecorder.release();
-//        callSocket.disconnect();
-//        callSocket.close();
-//        receiverSocket.disconnect();
-//        receiverSocket.close();
-//        track.stop();
-//        track.flush();
-//        track.release();
         speakers = false;
         call = false;
         super.onBackPressed();
