@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -21,7 +22,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 
 public class CallActivity extends AppCompatActivity {
-    Button btnEndCall;
+    ImageView btnEndCall;
     int MY_PORT;
     int FRIEND_PORT;
     String friendIp;

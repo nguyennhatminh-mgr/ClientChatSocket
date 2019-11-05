@@ -66,10 +66,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingLeft="5dp"
+        android:paddingLeft="10dp"
         android:paddingRight="5dp"
         android:paddingBottom="5dp"
-        android:paddingTop="3dp">
+        android:paddingTop="3dp"
+        android:background="@drawable/frame_message_border">
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -79,7 +80,7 @@
             android:layout_marginRight="7dp"
             />
         <EditText
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/edtAccountNameHome"
             android:padding="5dp"
@@ -87,6 +88,7 @@
             android:backgroundTint="@color/backgroundMessage"
             android:focusable="false"
             android:textSize="22dp"
+            android:textColor="@color/textColor"
             />
     </LinearLayout>
 
