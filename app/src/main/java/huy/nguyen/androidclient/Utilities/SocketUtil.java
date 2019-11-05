@@ -24,9 +24,6 @@ public class SocketUtil {
     private static String serverIp;
     private static UserAccount myAccount;
     public static Map<String, Socket> socketMap = new HashMap<>();
-    private static final String NOTIFY_ONLINE = "NOTIFY_ONLINE";
-    private static final String END_NOTIFY_ONLINE = "END_NOTIFY_ONLINE";
-    private static final String REQUEST_ONLINE = "REQUEST_ONLINE";
     private static final int SERVER_PORT = 8080;
     public static BufferedReader reader;
     public static PrintWriter writer;
@@ -78,7 +75,7 @@ public class SocketUtil {
                 PrintWriter output = null;
                 try {
                     output = new PrintWriter(socket.getOutputStream());
-                    output.write("SIGNUP" + "\n");
+                    output.write(SocketProtocol.SIGNUP_ACTION + "\n");
                     output.write(username + "\n");
                     output.write(password + "\n");
                     output.write(accountname + "\n");
@@ -121,7 +118,7 @@ public class SocketUtil {
                 PrintWriter output = null;
                 try {
                     output = new PrintWriter(socket.getOutputStream());
-                    output.write("LOGIN" + "\n");
+                    output.write(SocketProtocol.LOGIN_ACTION + "\n");
                     output.write(username + "\n");
                     output.write(password + "\n");
                     output.flush();
@@ -163,7 +160,7 @@ public class SocketUtil {
                 PrintWriter output = null;
                 try {
                     output = new PrintWriter(socket.getOutputStream());
-                    output.write(REQUEST_ONLINE+"\n");
+                    output.write(SocketProtocol.REQUEST_ONLINE+"\n");
                     output.flush();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -181,10 +178,10 @@ public class SocketUtil {
                         Log.e("1234", code );
                         if (code!=null){
                             switch (code){
-                                case NOTIFY_ONLINE:{
+                                case SocketProtocol.NOTIFY_ONLINE:{
                                     String user;
                                     ArrayList<UserInfo> userlist = new ArrayList<>();
-                                    while (!(user=input.readLine()).equals(END_NOTIFY_ONLINE)){
+                                    while (!(user=input.readLine()).equals(SocketProtocol.END_NOTIFY_ONLINE)){
                                         if(user.indexOf(":")!=-1){
                                             userlist.add(UserInfo.parseUser(user));
                                         }

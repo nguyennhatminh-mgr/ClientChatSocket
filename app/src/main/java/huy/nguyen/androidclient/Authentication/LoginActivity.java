@@ -65,14 +65,14 @@ public class LoginActivity extends AppCompatActivity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    if (result.equals("LOGIN_SUCCESS")) {
+                                    if (result.equals(SocketProtocol.LOGIN_SUCCESS)) {
                                         Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                                         startActivity(intent);
                                         finish();
-                                    } else if (result.equals("LOGIN_FAIL_PASSWORD")) {
+                                    } else if (result.equals(SocketProtocol.LOGIN_FAIL_PASSWORD)) {
                                         edtPassword.setError("Password is wrong");
 //                                Toast.makeText(LoginActivity.this,"Password is wrong",Toast.LENGTH_SHORT).show();
-                                    } else if (result.equals("LOGIN_FAIL_USERNAME")) {
+                                    } else if (result.equals(SocketProtocol.LOGIN_FAIL_USERNAME)) {
                                         edtUsername.setError("Username is wrong");
 //                                Toast.makeText(LoginActivity.this,"Username is wrong",Toast.LENGTH_SHORT).show();
                                     }
