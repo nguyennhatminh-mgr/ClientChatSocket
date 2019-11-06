@@ -39,7 +39,7 @@ public class LoginActivity extends AppCompatActivity {
     String TVTT_IP = "192.168.200.13";
     String TV_IP = "10.228.230.101";
     String KTX_IP = "172.17.23.47";
-    String IP = HUY_IP;
+    String IP = SocketProtocol.IP_SOCKET_SERVER;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

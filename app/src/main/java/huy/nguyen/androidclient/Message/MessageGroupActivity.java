@@ -172,10 +172,11 @@ public class MessageGroupActivity extends AppCompatActivity {
                             String msg;
                             while (!(msg=input.readLine()).equals(SocketProtocol.END_MESSAGE_RESPONE_IN_GROUP)){
                                 String username = msg;
+                                String accoutname=input.readLine();
                                 String message = input.readLine();
-                                User user = new User(username);
+                                User user = new User(accoutname);
                                 boolean isCurrentUser=false;
-                                if(username.equals(SocketUtil.getMyAccount().getAccountname())){
+                                if(username.equals(SocketUtil.getMyAccount().getUsername())){
                                     isCurrentUser=true;
                                 }
 
@@ -194,8 +195,9 @@ public class MessageGroupActivity extends AppCompatActivity {
                             String msg;
                             while (!(msg=input.readLine()).equals(SocketProtocol.END_MESSAGE_SINGLE_RESPONE_IN_GROUP)){
                                 String username = msg;
+                                String accountname=input.readLine();
                                 String message = input.readLine();
-                                User user = new User(username);
+                                User user = new User(accountname);
                                 final Message messageReal = new Message(message, user, false);
                                 runOnUiThread(new Runnable() {
                                     @Override
