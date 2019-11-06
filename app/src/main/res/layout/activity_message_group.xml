@@ -7,69 +7,44 @@
     android:layout_margin = "16dp"
     tools:context = ".MainActivity"
     >
-    <LinearLayout
+    <androidx.recyclerview.widget.RecyclerView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:orientation="vertical"
-        android:gravity="center_vertical|center_horizontal"
-        android:id="@+id/alert">
-        <ImageView
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="@drawable/ic_notifications"
-            android:layout_marginBottom="5dp"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Waiting for respond..."
-            android:textSize="24dp"/>
-    </LinearLayout>
-
+        android:layout_height="wrap_content"
+        android:id="@+id/rcvUserInGroup"
+        android:layout_marginBottom="15dp"
+        />
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="visible"
-        android:id="@+id/lstMessage"
+        android:id="@+id/lvGroupMessage"
         android:divider="@android:color/transparent"
         android:dividerHeight="5dp"
-        android:layout_below="@id/alert"
         android:nestedScrollingEnabled="true"
-        android:layout_above="@id/lyBot"
-
+        android:layout_above="@id/lyGroupBot"
+        android:layout_below="@id/rcvUserInGroup"
         />
     <LinearLayout
-        android:id="@+id/lyBot"
+        android:id="@+id/lyGroupBot"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_alignParentBottom="true"
         android:gravity="center"
-        android:visibility="visible"
         android:layout_marginTop="10dp">
 
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            app:srcCompat="@drawable/ic_file_upload_black_24dp"
-            android:id="@+id/btnFileUpLoad"
-            android:layout_weight="1"/>
-
-        <ImageView
-            android:id="@+id/btnCall"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            app:srcCompat="@drawable/ic_call_black_24dp" />
-
+<!--        <ImageView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="match_parent"-->
+<!--            app:srcCompat="@drawable/ic_file_upload_black_24dp"-->
+<!--            android:id="@+id/btnGroupFileUpLoad"-->
+<!--            android:layout_weight="1"/>-->
         <EditText
-            android:id = "@+id/etMessage"
+            android:id = "@+id/edtGroupMessage"
             android:layout_width = "wrap_content"
             android:layout_height = "wrap_content"
             android:hint = "Enter Message"
             android:inputType = "text"
-            android:layout_below="@id/lstMessage"
-            android:layout_weight="8"
+            android:layout_weight="10"
             android:background="@drawable/frame_message_border"
             android:paddingTop="5dp"
             android:paddingBottom="5dp"
@@ -77,7 +52,7 @@
             android:paddingLeft="15dp"
             android:paddingRight="5dp"/>
         <ImageView
-            android:id = "@+id/btnSend"
+            android:id = "@+id/btnGroupSend"
             android:layout_width = "wrap_content"
             android:layout_height = "match_parent"
             android:text = "SEND"

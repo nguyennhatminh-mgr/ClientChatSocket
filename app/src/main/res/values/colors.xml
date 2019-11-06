@@ -3,4 +3,9 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+    <color name="backgroundMessage">#4267b2</color>
+    <color name="textLoginColor">#FFFFFF</color>
+    <color name="textColor">#000000</color>
+    <color name="backgroundIconHome">#ECE8E8</color>
+    <color name="backgroundIconEndCall">#F72315</color>
 </resources>

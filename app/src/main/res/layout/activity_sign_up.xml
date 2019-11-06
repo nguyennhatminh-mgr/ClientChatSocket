@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Authentication.LoginActivity"
+    android:orientation="vertical"
+    android:background="@drawable/background_simple2"
+    android:padding="30dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center">
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            app:srcCompat="@drawable/ic_person_black_24dp" />
+    </LinearLayout>
+    <EditText
+        android:layout_marginTop="50dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Account name"
+        android:id="@+id/edtAccountNameSignUp"
+        android:backgroundTint="@color/textLoginColor"
+        android:drawableStart="@drawable/ic_person_outline_black_24dp"
+        android:drawablePadding="10dp"
+        android:ems="10"
+        android:textColor="@color/textLoginColor"
+        android:textColorHint="@color/textLoginColor"
+        tools:ignore="Autofill"
+        />
+    <EditText
+        android:layout_marginTop="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter username"
+        android:id="@+id/edtUsernameSignUp"
+        android:backgroundTint="@color/textLoginColor"
+        android:drawableStart="@drawable/ic_person_outline_black_24dp"
+        android:drawablePadding="10dp"
+        android:ems="10"
+        android:textColor="@color/textLoginColor"
+        android:textColorHint="@color/textLoginColor"
+        tools:ignore="Autofill"
+        />
+    <EditText
+        android:layout_marginTop="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter password"
+        android:id="@+id/edtPasswordSignUp"
+        android:backgroundTint="@color/textLoginColor"
+        android:drawableStart="@drawable/ic_lock_outline_black_24dp"
+        android:drawablePadding="10dp"
+        android:ems="10"
+        android:textColor="@color/textLoginColor"
+        android:textColorHint="@color/textLoginColor"
+        tools:ignore="Autofill"
+        android:inputType="textPassword"
+        />
+
+    <Button
+        android:layout_marginTop="50dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/radius_button"
+        android:text="Sign up"
+        android:textColor="@color/textLoginColor"
+        android:id="@+id/btnSignUp"
+        android:drawableStart="@drawable/ic_exit_to_app_black_24dp"
+        android:paddingLeft="100dp"
+        android:paddingRight="100dp"
+        />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Click here to login"
+            android:textColor="@color/textLoginColor"
+            android:id="@+id/txtBackToLoginInSignUp"
+            android:textSize="20dp"
+            />
+    </LinearLayout>
+</LinearLayout>
