@@ -113,7 +113,7 @@ public class HomeActivity extends AppCompatActivity {
         });
         while (true){
             if(SocketUtil.getMyAccount()!=null){
-                edtAccountName.setText(SocketUtil.getMyAccount().getUsername().toUpperCase());
+                edtAccountName.setText(SocketUtil.getMyAccount().getAccountname().toUpperCase());
                 break;
             }
         }
